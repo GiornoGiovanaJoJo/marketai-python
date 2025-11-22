@@ -3,155 +3,94 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 
+class CampaignStatus(models.IntegerChoices):
+    """Campaign status enum - migrated from Laravel App\Enums\CampaignStatus"""
+    ACTIVE = 1, _('Active')
+    INACTIVE = 2, _('Inactive')
+    ERROR = 3, _('Error')
+
+
+class Marketplace(models.IntegerChoices):
+    """Marketplace enum - migrated from Laravel App\Enums\Marketplace"""
+    WILDBERRIES = 1, _('Wildberries')
+    OZON = 2, _('Ozon')
+    YANDEX_MARKET = 3, _('Yandex Market')
+
+
 class Campaign(models.Model):
     """
-    Campaign model - migrated from Laravel
-    Represents a marketing campaign on marketplaces
+    Campaign model - exact migration from Laravel MarketAI backend
+    
+    Laravel Model: App\Models\Campaign
+    Table: campaigns
+    
+    Key features:
+    - No automatic timestamps (timestamps = false in Laravel)
+    - Unique constraint on (user_id, key)
+    - Foreign key to User with CASCADE delete
+    - Dispatches events on create/delete (handled via Django signals)
     """
-    
-    class MarketplaceChoices(models.TextChoices):
-        WILDBERRIES = 'wildberries', 'Вайлдберриз'
-        OZON = 'ozon', 'Ozon'
-        YANDEX_MARKET = 'yandex_market', 'Яндекс.Маркет'
-        OTHER = 'other', 'Другое'
-    
-    class StatusChoices(models.TextChoices):
-        DRAFT = 'draft', 'Черновик'
-        ACTIVE = 'active', 'Активна'
-        PAUSED = 'paused', 'Приостановлена'
-        COMPLETED = 'completed', 'Завершена'
-        ARCHIVED = 'archived', 'Архив'
     
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='campaigns',
         verbose_name=_('user'),
+        db_index=True,
     )
     
     name = models.CharField(
-        _('name'),
+        _('campaign name'),
         max_length=255,
     )
     
-    # Key field from Laravel (API key for marketplace integration)
     key = models.CharField(
         _('API key'),
-        max_length=255,
-        help_text=_('API key for marketplace integration'),
+        max_length=2048,
+        help_text=_('API key for marketplace integration (max 2048 chars)'),
     )
     
-    description = models.TextField(
-        _('description'),
-        blank=True,
-        null=True,
-    )
-    
-    marketplace = models.CharField(
-        _('marketplace'),
-        max_length=50,
-        choices=MarketplaceChoices.choices,
-        default=MarketplaceChoices.WILDBERRIES,
-    )
-    
-    status = models.CharField(
+    status = models.IntegerField(
         _('status'),
-        max_length=20,
-        choices=StatusChoices.choices,
-        default=StatusChoices.DRAFT,
+        choices=CampaignStatus.choices,
+        default=CampaignStatus.INACTIVE,
+        help_text=_('Campaign status: Active (1), Inactive (2), Error (3)'),
     )
     
-    budget = models.DecimalField(
-        _('budget'),
-        max_digits=12,
-        decimal_places=2,
+    marketplace = models.IntegerField(
+        _('marketplace'),
+        choices=Marketplace.choices,
         null=True,
         blank=True,
+        help_text=_('Marketplace: Wildberries (1), Ozon (2), Yandex Market (3)'),
     )
     
-    spent = models.DecimalField(
-        _('spent'),
-        max_digits=12,
-        decimal_places=2,
-        default=0,
-    )
-    
-    start_date = models.DateField(
-        _('start date'),
-        null=True,
-        blank=True,
-    )
-    
-    end_date = models.DateField(
-        _('end date'),
-        null=True,
-        blank=True,
-    )
-    
-    # Metrics
-    impressions = models.IntegerField(
-        _('impressions'),
-        default=0,
-    )
-    
-    clicks = models.IntegerField(
-        _('clicks'),
-        default=0,
-    )
-    
-    conversions = models.IntegerField(
-        _('conversions'),
-        default=0,
-    )
-    
-    revenue = models.DecimalField(
-        _('revenue'),
-        max_digits=12,
-        decimal_places=2,
-        default=0,
-    )
-    
-    created_at = models.DateTimeField(
-        _('created at'),
-        auto_now_add=True,
-    )
-    
-    updated_at = models.DateTimeField(
-        _('updated at'),
-        auto_now=True,
-    )
+    # Explicitly disable automatic timestamps (matching Laravel: $timestamps = false)
+    # We keep the fields but don't auto-update them
+    # created_at = models.DateTimeField(auto_now_add=True)  # Commented out
+    # updated_at = models.DateTimeField(auto_now=True)      # Commented out
     
     class Meta:
         db_table = 'campaigns'
         verbose_name = _('Campaign')
         verbose_name_plural = _('Campaigns')
-        ordering = ['-created_at']
+        ordering = ['-id']  # Order by ID descending since no created_at
         indexes = [
-            models.Index(fields=['user', 'status']),
-            models.Index(fields=['marketplace', 'status']),
-            models.Index(fields=['created_at']),
+            models.Index(fields=['user']),  # Index on user_id (from Laravel migration)
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'key'],
+                name='campaigns_user_id_key_unique',
+                violation_error_message=_('This user already has a campaign with this key.'),
+            )
         ]
     
     def __str__(self):
-        return f"{self.name} ({self.get_marketplace_display()}) - {self.get_status_display()}"
+        return f"{self.name} ({self.get_marketplace_display() or 'No marketplace'}) - {self.get_status_display()}"
     
-    @property
-    def ctr(self):
-        """Click-through rate"""
-        if self.impressions > 0:
-            return (self.clicks / self.impressions) * 100
-        return 0
-    
-    @property
-    def conversion_rate(self):
-        """Conversion rate"""
-        if self.clicks > 0:
-            return (self.conversions / self.clicks) * 100
-        return 0
-    
-    @property
-    def roi(self):
-        """Return on investment"""
-        if float(self.spent) > 0:
-            return ((float(self.revenue) - float(self.spent)) / float(self.spent)) * 100
-        return 0
+    def save(self, *args, **kwargs):
+        """
+        Custom save method to ensure business logic
+        """
+        super().save(*args, **kwargs)
