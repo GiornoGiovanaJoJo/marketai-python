@@ -26,9 +26,10 @@
 - **TypeScript:** 5.2
 - **Vite:** 5.0
 - **Tailwind CSS:** 3.3
-- **Radix UI**
+- **Radix UI** - компоненты
 - **React Router:** 6.20
-- **Recharts:** 3.3
+- **Axios** - HTTP клиент
+- **Recharts:** 3.3 - графики
 
 ## 📁 Структура проекта
 
@@ -46,15 +47,22 @@ marketai-python/
 │   ├── requirements.txt
 │   ├── Dockerfile
 │   └── Makefile
-├── frontend/            # React приложение (в процессе)
+├── frontend/            # React приложение ✨
 │   ├── src/
+│   │   ├── components/  # Переиспользуемые компоненты
+│   │   ├── pages/       # 26 страниц приложения
+│   │   ├── services/    # API сервисы
+│   │   ├── contexts/    # React Context
+│   │   ├── hooks/       # Custom hooks
+│   │   ├── lib/         # Утилиты
+│   │   ├── types/       # TypeScript типы
+│   │   └── App.tsx
 │   ├── public/
-│   └── package.json
+│   ├── package.json
+│   ├── Dockerfile
+│   └── nginx.conf
 ├── docs/                # Документация
-│   └── API.md
-├── docker-compose.yml   # Docker конфигурация
-├── .env.example        # Пример переменных окружения
-└── CONTRIBUTING.md     # Гайд для разработчиков
+└── docker-compose.yml   # Docker конфигурация
 ```
 
 ## 🚀 Быстрый старт
@@ -87,6 +95,12 @@ docker-compose exec backend python manage.py createsuperuser
 docker-compose exec backend python manage.py create_test_data
 ```
 
+**Приложение доступно:**
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8000/api/
+- **API Docs:** http://localhost:8000/api/docs/
+- **Admin:** http://localhost:8000/admin/
+
 ### Локальная разработка
 
 #### Backend
@@ -106,11 +120,6 @@ python manage.py migrate
 
 # Запустить сервер
 python manage.py runserver
-
-# Или используйте Makefile
-make install  # Установка зависимостей
-make migrate  # Миграции
-make runserver  # Запуск сервера
 ```
 
 #### Frontend
@@ -123,6 +132,8 @@ npm install
 
 # Запустить dev сервер
 npm run dev
+
+# Приложение доступно на http://localhost:3000
 ```
 
 ## 📚 API документация
@@ -136,95 +147,106 @@ npm run dev
 
 ## 🔧 Основные команды
 
+### Backend
 ```bash
-# Backend
 python manage.py makemigrations  # Создать миграции
 python manage.py migrate         # Применить миграции
 python manage.py test            # Запустить тесты
 python manage.py shell           # Django shell
 python manage.py create_test_data  # Создать тестовые данные
 
-# Или используйте Makefile
-make help         # Показать все команды
-make test         # Тесты
-make lint         # Проверка кода
-make format       # Форматирование
-
 # Celery
 celery -A core worker -l info    # Запустить worker
 celery -A core beat -l info      # Запустить scheduler
-
-# Frontend
-npm run build                    # Production build
-npm run lint                     # Проверка кода
-npm run type-check               # TypeScript проверка
 ```
 
-## 📖 Миграция с Laravel
+### Frontend
+```bash
+npm run dev          # Dev сервер
+npm run build        # Production сборка
+npm run lint         # Проверка кода
+npm run type-check   # TypeScript проверка
+npm run preview      # Просмотр production
+```
+
+## 📋 Страницы приложения
+
+Frontend включает 26 страниц:
+
+### Аутентификация
+- Вход (`/login`)
+- Регистрация (`/register`)
+
+### Главные
+- Главная (`/`)
+- Dashboard (`/dashboard`)
+- Кампании (`/campaigns`)
+
+### Реклама
+- РНП (`/advertising/rnp`)
+- ДДС (`/advertising/dds`)
+
+### Отчеты
+- Финансовый отчет (`/reports/financial`)
+- План-факт (`/reports/plan-fact`)
+- Юнит-экономика (`/reports/unit-economics`)
+- Метрики (`/reports/metrics`)
+- Heatmap (`/reports/heatmap`)
+
+### Организация
+- Организация (`/organization`)
+- Сотрудники (`/organization/employees`)
+- Партнеры (`/organization/partners`)
+- Доступ (`/organization/access`)
+
+### Автоматизация
+- Автоматизация (`/automation`)
+- Предпоставка (`/automation/pre-delivery`)
+
+### OPI
+- OPI Dashboard (`/opi`)
+
+### Реферальная программа
+- Обзор (`/referral`)
+- Сеть (`/referral/network`)
+- Доход (`/referral/income`)
+- О программе (`/referral/about`)
+- Выплаты (`/referral/payments`)
+- Настройки (`/referral/settings`)
+
+## 📚 Миграция с Laravel
 
 Проект успешно мигрирован с [marketai-backend](https://github.com/GiornoGiovanaJoJo/marketai-backend) (PHP Laravel) 🎉
 
 ### Статус миграции
 
-#### Backend (готово к использованию)
+#### Backend (готов к использованию) 🟫
 - [x] Базовая структура Django проекта
 - [x] Docker конфигурация (PostgreSQL, Redis, RabbitMQ)
 - [x] Аутентификация (JWT)
-  - Register: `POST /api/auth/register/`
-  - Login: `POST /api/auth/login/`
-  - Logout: `POST /api/auth/logout/`
-  - Me: `GET /api/auth/me/`
-- [x] Модель User (кастомная с email как username)
-- [x] Модель Campaign (с метриками CTR, ROI, Conversion Rate)
-- [x] API эндпоинты CRUD для кампаний
+- [x] Модель User (кастомная с email)
+- [x] Модель Campaign (с метриками)
+- [x] API эндпоинты CRUD
 - [x] Интеграция с Wildberries API
-  - Sync campaigns
-  - Sync statistics
-  - Connection test
 - [x] Статистика и отчеты
-  - Financial report
-  - Dashboard stats
-  - Campaign performance
 - [x] Celery задачи
-  - Daily statistics generation
-  - Wildberries data sync
 - [x] API документация (Swagger/ReDoc)
 - [x] Тесты (pytest)
-- [x] Management команды
 
-#### Frontend (в процессе)
-- [ ] Перенос React компонентов из [marketai-front](https://github.com/GiornoGiovanaJoJo/marketai-front)
-- [ ] Интеграция с Django API
-- [ ] Настройка axios и JWT
+#### Frontend (базовая структура готова) 🟫
+- [x] Базовая структура React + TypeScript + Vite
+- [x] Настройка Tailwind CSS
+- [x] API клиент (axios) с JWT
+- [x] API сервисы (auth, campaigns, statistics)
+- [x] TypeScript типы
+- [x] Роутер (все 26 маршрутов)
+- [x] Dockerfile + nginx.conf
+- [ ] Перенос компонентов из [marketai-front](https://github.com/GiornoGiovanaJoJo/marketai-front)
 - [ ] Перенос всех 26 страниц
-
-### Маппинг API эндпоинтов
-
-| Laravel Endpoint | Django Endpoint | Статус |
-|-----------------|-----------------|-------|
-| `POST /api/auth/register` | `POST /api/auth/register/` | ✅ |
-| `POST /api/auth/login` | `POST /api/auth/login/` | ✅ |
-| `GET /api/auth/me` | `GET /api/auth/me/` | ✅ |
-| `POST /api/auth/logout` | `POST /api/auth/logout/` | ✅ |
-| `GET /api/campaigns` | `GET /api/campaigns/` | ✅ |
-| `POST /api/campaigns` | `POST /api/campaigns/` | ✅ |
-| `GET /api/campaigns/{id}` | `GET /api/campaigns/{id}/` | ✅ |
-| `PUT /api/campaigns/{id}` | `PUT /api/campaigns/{id}/` | ✅ |
-| `DELETE /api/campaigns/{id}` | `DELETE /api/campaigns/{id}/` | ✅ |
-| `GET /api/statistics/financial-report` | `GET /api/statistics/financial-report/` | ✅ |
-| `GET /api/users` | `GET /api/users/` | ✅ |
 
 ## 🤝 Участие в разработке
 
 Пожалуйста, прочитайте [CONTRIBUTING.md](CONTRIBUTING.md) для подробной информации.
-
-**Кратко:**
-
-1. Fork репозитория
-2. Создайте feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit изменения (`git commit -m 'Add some AmazingFeature'`)
-4. Push в branch (`git push origin feature/AmazingFeature`)
-5. Откройте Pull Request
 
 ## 📝 Лицензия
 
@@ -240,4 +262,4 @@ MIT License
 
 ---
 
-**Статус проекта:** 🟢 Backend готов | 🟡 Frontend в процессе
+**Статус проекта:** 🟫 Backend готов | 🟫 Frontend базовая структура
