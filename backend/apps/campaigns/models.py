@@ -34,6 +34,13 @@ class Campaign(models.Model):
         max_length=255,
     )
     
+    # Key field from Laravel (API key for marketplace integration)
+    key = models.CharField(
+        _('API key'),
+        max_length=255,
+        help_text=_('API key for marketplace integration'),
+    )
+    
     description = models.TextField(
         _('description'),
         blank=True,
