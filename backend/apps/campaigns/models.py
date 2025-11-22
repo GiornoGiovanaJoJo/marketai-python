@@ -2,19 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-
-class CampaignStatus(models.IntegerChoices):
-    """Campaign status enum - migrated from Laravel App\Enums\CampaignStatus"""
-    ACTIVE = 1, _('Active')
-    INACTIVE = 2, _('Inactive')
-    ERROR = 3, _('Error')
-
-
-class Marketplace(models.IntegerChoices):
-    """Marketplace enum - migrated from Laravel App\Enums\Marketplace"""
-    WILDBERRIES = 1, _('Wildberries')
-    OZON = 2, _('Ozon')
-    YANDEX_MARKET = 3, _('Yandex Market')
+from .enums import CampaignStatus, Marketplace
 
 
 class Campaign(models.Model):
