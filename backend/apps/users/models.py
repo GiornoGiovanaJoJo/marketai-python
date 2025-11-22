@@ -5,68 +5,92 @@ from django.utils.translation import gettext_lazy as _
 
 class User(AbstractUser):
     """
-    Custom User model - migrated from Laravel
+    Custom User model - migrated from Laravel MarketAI backend
+    
+    Key differences from default Django User:
+    - Phone is the primary unique identifier (not username)
+    - Email is optional but unique
+    - Both email and phone can be verified independently
+    - Removed company and avatar fields (not in Laravel)
     """
+    
+    # Override email to make it nullable but unique when present
     email = models.EmailField(
         _('email address'),
         unique=True,
+        null=True,
+        blank=True,
         error_messages={
             'unique': _('A user with that email already exists.'),
         },
     )
     
+    # Phone is required and unique (primary auth field)
     phone = models.CharField(
         _('phone number'),
         max_length=20,
-        blank=True,
+        unique=True,
+        error_messages={
+            'unique': _('A user with that phone number already exists.'),
+        },
+    )
+    
+    # Verification timestamps (matching Laravel structure)
+    email_verified_at = models.DateTimeField(
+        _('email verified at'),
         null=True,
-    )
-    
-    company = models.CharField(
-        _('company name'),
-        max_length=255,
         blank=True,
-        null=True,
     )
     
-    avatar = models.ImageField(
-        _('avatar'),
-        upload_to='avatars/',
+    phone_verified_at = models.DateTimeField(
+        _('phone verified at'),
+        null=True,
         blank=True,
+    )
+    
+    # Override username to not be required (we use phone instead)
+    username = models.CharField(
+        _('username'),
+        max_length=150,
+        unique=True,
         null=True,
+        blank=True,
     )
     
-    is_email_verified = models.BooleanField(
-        _('email verified'),
-        default=False,
-    )
+    # Use first_name as 'name' field (matching Laravel)
+    first_name = models.CharField(_('name'), max_length=150)
     
-    created_at = models.DateTimeField(
-        _('created at'),
-        auto_now_add=True,
-    )
+    # We don't use last_name in Laravel version
+    last_name = models.CharField(_('last name'), max_length=150, blank=True)
     
-    updated_at = models.DateTimeField(
-        _('updated at'),
-        auto_now=True,
-    )
-
-    # Make email the unique identifier
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    # Authentication configuration
+    USERNAME_FIELD = 'phone'  # Login with phone
+    REQUIRED_FIELDS = ['first_name']  # Required when creating superuser
 
     class Meta:
         db_table = 'users'
         verbose_name = _('User')
         verbose_name_plural = _('Users')
-        ordering = ['-created_at']
+        ordering = ['-date_joined']
+        indexes = [
+            models.Index(fields=['phone']),
+            models.Index(fields=['email']),
+        ]
 
     def __str__(self):
-        return f"{self.email} - {self.get_full_name() or self.username}"
+        return f"{self.phone} - {self.first_name}"
 
-    def get_full_name(self):
-        """
-        Return the first_name plus the last_name, with a space in between.
-        """
-        full_name = f"{self.first_name} {self.last_name}"
-        return full_name.strip()
+    @property
+    def name(self):
+        """Alias for first_name to match Laravel API"""
+        return self.first_name
+    
+    @property
+    def is_email_verified(self):
+        """Check if email is verified"""
+        return self.email_verified_at is not None
+    
+    @property
+    def is_phone_verified(self):
+        """Check if phone is verified"""
+        return self.phone_verified_at is not None
