@@ -1,348 +1,459 @@
-# 🐳 Docker Гайд - Запуск MarketAI
+# 🐳 Docker Guide - MarketAI Python
 
-## 🚀 Быстрый старт
+## 🚀 Быстрый старт для локального тестирования
 
-### 1. Предварительные требования
+### Системные требования
 
-- **Docker Desktop** установлен и запущен
-- **Git** для клонирования репозитория
-- **8 GB RAM** минимум (рекомендуется 16 GB)
+- **Docker Desktop** 4.25+ (Windows/macOS) или **Docker Engine** 24+ (Linux)
+- **Docker Compose** v2.20+
+- **Git**
+- Минимум **8GB RAM**, рекомендуется **16GB**
+- Свободное место: **10GB+**
 
-### 2. Клонировать репозиторий
+---
 
-```powershell
-# Windows PowerShell
-git clone https://github.com/GiornoGiovanaJoJo/marketai-python.git
-cd marketai-python
-git checkout feature/full-frontend-migration
-```
+## 📦 Метод 1: Автоматический запуск (Рекомендуется)
+
+### Linux/macOS:
 
 ```bash
-# Linux / macOS
+# 1. Клонируйте репозиторий
 git clone https://github.com/GiornoGiovanaJoJo/marketai-python.git
 cd marketai-python
-git checkout feature/full-frontend-migration
+
+# 2. Сделайте скрипт исполняемым
+chmod +x docker-local.sh
+
+# 3. Запустите всё одной командой
+./docker-local.sh start
 ```
 
-### 3. Создать .env файл
+### Windows (PowerShell):
 
 ```powershell
+# 1. Клонируйте репозиторий
+git clone https://github.com/GiornoGiovanaJoJo/marketai-python.git
+cd marketai-python
+
+# 2. Запустите скрипт
+.\docker-local.ps1 start
+
+# Если появится ошибка выполнения скриптов:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\docker-local.ps1 start
+```
+
+**Готово!** Через 2-3 минуты все сервисы будут запущены.
+
+---
+
+## 🎯 Доступ к сервисам
+
+После успешного запуска откройте в браузере:
+
+| Сервис | URL | Описание |
+|--------|-----|----------|
+| **Frontend** | http://localhost:3000 | React приложение |
+| **Backend API** | http://localhost:8000/api | Django REST API |
+| **Admin Panel** | http://localhost:8000/admin | Django Admin (login: `admin` / password: `admin`) |
+| **API Documentation** | http://localhost:8000/api/docs | Swagger/OpenAPI |
+| **PostgreSQL** | localhost:5432 | База данных |
+| **Redis** | localhost:6379 | Кэш и Celery broker |
+
+---
+
+## 🛠️ Управление сервисами
+
+### Доступные команды:
+
+```bash
+# Linux/macOS
+./docker-local.sh [command]
+
 # Windows
-copy .env.example .env
+.\docker-local.ps1 [command]
 ```
 
+| Команда | Описание |
+|---------|----------|
+| `start` | Запустить все сервисы |
+| `stop` | Остановить все сервисы |
+| `restart` | Перезапустить все сервисы |
+| `restart-one <service>` | Перезапустить один сервис (backend, frontend, celery_worker, postgres, redis) |
+| `logs` | Показать логи всех сервисов |
+| `status` | Показать статус сервисов |
+| `shell` | Открыть Django shell |
+| `migrate` | Применить миграции БД |
+| `test` | Запустить тесты |
+| `clean` | Полная очистка (удалить всё) |
+| `help` | Справка |
+
+### Примеры использования:
+
 ```bash
-# Linux / macOS
+# Посмотреть логи
+./docker-local.sh logs
+
+# Перезапустить только backend
+./docker-local.sh restart-one backend
+
+# Применить новые миграции
+./docker-local.sh migrate
+
+# Django shell для отладки
+./docker-local.sh shell
+
+# Запустить тесты
+./docker-local.sh test
+```
+
+---
+
+## 📦 Метод 2: Ручной запуск (для опытных пользователей)
+
+### 1. Подготовка окружения:
+
+```bash
+# Клонируйте репозиторий
+git clone https://github.com/GiornoGiovanaJoJo/marketai-python.git
+cd marketai-python
+
+# Создайте .env файл
 cp .env.example .env
+
+# Отредактируйте .env (опционально)
+nano .env  # или используйте любой редактор
 ```
 
-### 4. Запустить все сервисы
+### 2. Запуск сервисов:
 
 ```bash
-docker-compose up -d
-```
+# Соберите образы
+docker-compose build --no-cache
 
-Это запустит:
-- ✅ **PostgreSQL 16** - база данных
-- ✅ **Redis 7** - кеш и брокер сообщений
-- ✅ **RabbitMQ 3** - очереди задач
-- ✅ **Django Backend** - API сервер
-- ✅ **Celery Worker** - фоновые задачи
-- ✅ **Celery Beat** - планировщик задач
-- ✅ **React Frontend** - веб-приложение
+# Запустите базы данных
+docker-compose up -d postgres redis
 
-### 5. Проверить статус
+# Подождите 10 секунд для инициализации БД
+sleep 10
 
-```bash
+# Запустите backend
+docker-compose up -d backend celery_worker celery_beat
+
+# Подождите 15 секунд для миграций
+sleep 15
+
+# Запустите frontend
+docker-compose up -d frontend
+
+# Проверьте статус
 docker-compose ps
 ```
 
-Должно показать 7 запущенных контейнеров.
-
----
-
-## 🌐 Доступ к приложению
-
-После запуска подождите 1-2 минуты, пока все сервисы полностью инициализируются.
-
-### 💻 Главные URL
-
-| Сервис | URL | Описание |
-|---------|-----|------------|
-| **Frontend** | http://localhost:3000 | React приложение |
-| **Backend API** | http://localhost:8000/api/ | Django REST API |
-| **API Docs (Swagger)** | http://localhost:8000/api/docs/ | Интерактивная документация API |
-| **Admin Panel** | http://localhost:8000/admin/ | Django админка |
-| **RabbitMQ Management** | http://localhost:15672 | Управление очередями (guest/guest) |
-
-### 🔑 Создание суперпользователя
-
-```bash
-docker-compose exec backend python manage.py createsuperuser
-```
-
-Введите:
-- Email
-- Password (дважды)
-
-### 📦 Создание тестовых данных (опционально)
-
-```bash
-docker-compose exec backend python manage.py create_test_data
-```
-
----
-
-## 🔧 Полезные команды
-
-### Просмотр логов
+### 3. Просмотр логов:
 
 ```bash
 # Все сервисы
 docker-compose logs -f
 
-# Только backend
+# Конкретный сервис
 docker-compose logs -f backend
-
-# Только frontend
 docker-compose logs -f frontend
-
-# Только Celery
-docker-compose logs -f celery_worker celery_beat
+docker-compose logs -f celery_worker
 ```
 
-### Перезапуск сервисов
+### 4. Остановка:
 
 ```bash
-# Перезапустить backend
-docker-compose restart backend
-
-# Перезапустить frontend
-docker-compose restart frontend
-
-# Перезапустить всё
-docker-compose restart
-```
-
-### Выполнение команд в контейнере
-
-```bash
-# Backend команды
-docker-compose exec backend python manage.py migrate
-docker-compose exec backend python manage.py makemigrations
-docker-compose exec backend python manage.py shell
-docker-compose exec backend python manage.py test
-
-# Frontend команды
-docker-compose exec frontend npm install
-docker-compose exec frontend npm run lint
-docker-compose exec frontend npm run type-check
-
-# Зайти в контейнер bash
-docker-compose exec backend sh
-docker-compose exec frontend sh
-```
-
-### Остановка и очистка
-
-```bash
-# Остановить все сервисы
+# Остановить сервисы (сохранить данные)
 docker-compose down
 
-# Остановить и удалить volumes (очистит базу данных)
-docker-compose down -v
-
-# Полная очистка (удалить всё: контейнеры, volumes, images)
+# Полная очистка (удалить всё включая данные)
 docker-compose down -v --rmi all
 ```
 
-### Пересобрать контейнеры
+---
 
-```bash
-# Пересобрать всё с нуля
-docker-compose build --no-cache
+## 🔧 Архитектура Docker
 
-# Пересобрать только backend
-docker-compose build backend
+### Сервисы:
 
-# Пересобрать только frontend
-docker-compose build frontend
-
-# Пересобрать и запустить
-docker-compose up -d --build
+```yaml
+marketai_network (Docker bridge network)
+├── postgres         # PostgreSQL 16 (Основная БД)
+├── redis            # Redis 7 (Кэш + Celery broker)
+├── backend          # Django 5.1 + Gunicorn
+├── celery_worker    # Celery Worker (фоновые задачи)
+├── celery_beat      # Celery Beat (планировщик)
+└── frontend         # React + Vite (dev server)
 ```
+
+### Volumes (persistent data):
+
+- `postgres_data` - База данных PostgreSQL
+- `redis_data` - Redis persistence
+- `static_volume` - Django статика
+- `media_volume` - Медиа файлы пользователей
+- `duckdb_data` - Аналитическая БД DuckDB
+- `logs_volume` - Логи приложения
 
 ---
 
-## 🐛 Решение проблем
+## 🐛 Отладка и решение проблем
 
-### Проблема 1: Backend не запускается
+### 1. Порты заняты
 
-**Симптом:**
-```
-backend exited with code 1
-```
+**Ошибка:** `Bind for 0.0.0.0:5432 failed: port is already allocated`
 
 **Решение:**
 ```bash
-# Просмотреть логи
+# Проверьте занятые порты
+netstat -tulpn | grep LISTEN  # Linux
+lsof -i :5432  # macOS
+netstat -ano | findstr :5432  # Windows
+
+# Остановите конфликтующий процесс или измените порты в docker-compose.yml
+```
+
+### 2. Backend не запускается
+
+```bash
+# Проверьте логи
 docker-compose logs backend
 
-# Пересобрать backend
-docker-compose build --no-cache backend
+# Проверьте подключение к БД
+docker-compose exec backend python manage.py check --database default
+
+# Пересоздайте миграции
+docker-compose exec backend python manage.py makemigrations
+docker-compose exec backend python manage.py migrate
+```
+
+### 3. Frontend не собирается
+
+```bash
+# Очистите node_modules
+docker-compose down
+docker volume rm marketai-python_node_modules 2>/dev/null || true
+docker-compose build --no-cache frontend
+docker-compose up -d frontend
+```
+
+### 4. БД не инициализируется
+
+```bash
+# Полная очистка и пересоздание БД
+docker-compose down -v
+docker volume rm marketai-python_postgres_data
+docker-compose up -d postgres
+sleep 10
 docker-compose up -d backend
 ```
 
-### Проблема 2: Frontend не открывается
+### 5. Celery задачи не выполняются
 
-**Симптом:**
-```
-Cannot connect to localhost:3000
-```
-
-**Решение:**
 ```bash
-# Проверить статус
-docker-compose ps frontend
+# Проверьте Celery worker
+docker-compose logs celery_worker
 
-# Просмотреть логи
-docker-compose logs -f frontend
+# Проверьте Redis
+docker-compose exec redis redis-cli ping
+# Должен вернуть: PONG
 
-# Перезапустить
-docker-compose restart frontend
+# Перезапустите Celery
+docker-compose restart celery_worker celery_beat
 ```
 
-### Проблема 3: Порт уже занят
+### 6. Низкая производительность
 
-**Симптом:**
-```
-Error: port is already allocated
-```
+**На Windows/macOS:**
+- Выделите Docker Desktop больше ресурсов (Settings → Resources)
+- Рекомендуется: 4 CPU cores, 8GB RAM
 
-**Решение:**
+**Общие советы:**
 ```bash
-# Windows
-netstat -ano | findstr :3000
-netstat -ano | findstr :8000
+# Очистите неиспользуемые образы и контейнеры
+docker system prune -a
 
-# Linux/macOS
-lsof -i :3000
-lsof -i :8000
-
-# Убить процесс или изменить порты в docker-compose.yml
-```
-
-### Проблема 4: База данных не доступна
-
-**Симптом:**
-```
-OperationalError: could not connect to server
-```
-
-**Решение:**
-```bash
-# Проверить статус PostgreSQL
-docker-compose ps postgres
-
-# Проверить health
-docker-compose exec postgres pg_isready -U marketai
-
-# Перезапустить всё
-docker-compose restart
-```
-
-### Проблема 5: API не отвечает на frontend
-
-**Симптом:**
-```
-CORS error or Network Error
-```
-
-**Решение:**
-```bash
-# Проверить .env
-cat .env | grep CORS
-
-# Должно быть:
-# DJANGO_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://frontend:3000
-
-# Перезапустить backend
-docker-compose restart backend
+# Проверьте использование ресурсов
+docker stats
 ```
 
 ---
 
-## 📋 Чек-лист проверки
+## 🔐 Безопасность для production
 
-После запуска проверь:
+> ⚠️ **ВНИМАНИЕ:** Текущая конфигурация предназначена **ТОЛЬКО для локальной разработки**!
 
-- [ ] Все 7 контейнеров запущены (`docker-compose ps`)
-- [ ] Frontend открывается на http://localhost:3000
-- [ ] Backend API отвечает на http://localhost:8000/api/
-- [ ] Swagger docs доступен на http://localhost:8000/api/docs/
-- [ ] Можно создать суперюзера
-- [ ] Можно зайти в admin панель
-- [ ] Регистрация работает на frontend
-- [ ] Вход работает на frontend
-- [ ] Dashboard загружается после входа
-- [ ] Все 26 страниц доступны
+Перед деплоем на production:
+
+1. **Измените секретные ключи в `.env`:**
+   ```bash
+   # Сгенерируйте новый Django SECRET_KEY
+   python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+   
+   # Сгенерируйте Fernet ключ для шифрования
+   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   ```
+
+2. **Обновите пароли БД:**
+   - `DB_PASSWORD`
+   - `POSTGRES_PASSWORD`
+
+3. **Отключите DEBUG режим:**
+   ```env
+   DJANGO_DEBUG=False
+   ```
+
+4. **Настройте ALLOWED_HOSTS:**
+   ```env
+   DJANGO_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+   ```
+
+5. **Используйте production Dockerfile для frontend:**
+   ```yaml
+   frontend:
+     build:
+       target: production  # вместо development
+   ```
+
+6. **Добавьте HTTPS (например, через nginx-proxy + letsencrypt)**
 
 ---
 
 ## 📊 Мониторинг
 
-### Использование ресурсов
+### Проверка здоровья сервисов:
 
 ```bash
-# Посмотреть использование CPU/RAM
-docker stats
+# Статус всех контейнеров
+docker-compose ps
 
-# Посмотреть размер volumes
-docker system df -v
+# Использование ресурсов
+docker stats marketai_backend marketai_frontend marketai_postgres
+
+# Проверка health checks
+docker inspect marketai_postgres | grep -A 10 Health
 ```
 
-### Ожидаемое использование
-
-- **PostgreSQL**: ~50-100 MB RAM
-- **Redis**: ~10-30 MB RAM
-- **RabbitMQ**: ~100-150 MB RAM
-- **Backend**: ~200-400 MB RAM
-- **Celery Worker**: ~150-300 MB RAM
-- **Celery Beat**: ~100-200 MB RAM
-- **Frontend (dev)**: ~300-500 MB RAM
-
-**Итого:** ~1-2 GB RAM в режиме development
-
----
-
-## 🚀 Production режим
-
-Для production используйте:
+### Логи:
 
 ```bash
-# Пересобрать frontend для production
-docker-compose -f docker-compose.prod.yml build frontend --build-arg target=production
+# Backend логи
+docker-compose logs -f --tail=100 backend
 
-# Запустить в production режиме
-docker-compose -f docker-compose.prod.yml up -d
+# Celery логи
+docker-compose logs -f --tail=100 celery_worker celery_beat
+
+# БД логи
+docker-compose logs -f --tail=50 postgres
 ```
 
-В production:
-- Frontend будет отдаваться через Nginx
-- Меньше использование памяти
-- Быстрее загрузка страниц
+---
+
+## 🧪 Тестирование
+
+### Запуск тестов:
+
+```bash
+# Все тесты
+docker-compose exec backend pytest -v
+
+# С coverage отчётом
+docker-compose exec backend pytest --cov=. --cov-report=html
+
+# Конкретное приложение
+docker-compose exec backend pytest apps/users/tests/
+
+# Конкретный тест
+docker-compose exec backend pytest apps/users/tests/test_models.py::TestUserModel::test_create_user
+```
 
 ---
 
-## 📚 Дополнительные ресурсы
+## 📝 Работа с БД
 
-- [📝 План миграции](./FRONTEND_MIGRATION_PLAN.md)
-- [💻 API документация](./docs/API.md)
-- [🔧 Скрипты миграции](./scripts/README.md)
-- [🐛 Issues](https://github.com/GiornoGiovanaJoJo/marketai-python/issues)
+### Миграции:
+
+```bash
+# Создать новые миграции
+docker-compose exec backend python manage.py makemigrations
+
+# Применить миграции
+docker-compose exec backend python manage.py migrate
+
+# Откатить миграцию
+docker-compose exec backend python manage.py migrate users 0001
+
+# Показать список миграций
+docker-compose exec backend python manage.py showmigrations
+```
+
+### Backup и Restore:
+
+```bash
+# Backup
+docker-compose exec -T postgres pg_dump -U marketai marketai > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Restore
+docker-compose exec -T postgres psql -U marketai marketai < backup_20251123_050000.sql
+```
+
+### Прямой доступ к PostgreSQL:
+
+```bash
+# PostgreSQL shell
+docker-compose exec postgres psql -U marketai -d marketai
+
+# Быстрые команды
+\dt              # список таблиц
+\d users_user    # структура таблицы
+\q               # выход
+```
 
 ---
 
-**Создано:** 2025-11-23  
-**Версия:** 1.0.0  
-**Статус:** ✅ Готово к тестированию
+## 🔄 Обновление проекта
+
+```bash
+# 1. Остановите сервисы
+docker-compose down
+
+# 2. Обновите код
+git pull origin main
+
+# 3. Пересоберите образы
+docker-compose build --no-cache
+
+# 4. Примените миграции
+docker-compose up -d postgres redis
+sleep 10
+docker-compose run --rm backend python manage.py migrate
+
+# 5. Запустите всё
+docker-compose up -d
+```
+
+---
+
+## 📚 Полезные ссылки
+
+- [Docker Documentation](https://docs.docker.com/)
+- [Docker Compose Reference](https://docs.docker.com/compose/compose-file/)
+- [Django Docker Best Practices](https://docs.docker.com/samples/django/)
+- [PostgreSQL Docker Hub](https://hub.docker.com/_/postgres)
+- [Redis Docker Hub](https://hub.docker.com/_/redis)
+
+---
+
+## 💬 Поддержка
+
+Если возникли проблемы:
+
+1. Проверьте [GitHub Issues](https://github.com/GiornoGiovanaJoJo/marketai-python/issues)
+2. Создайте новый Issue с подробным описанием проблемы
+3. Приложите логи: `docker-compose logs > logs.txt`
+
+---
+
+**Успешного тестирования! 🚀**
