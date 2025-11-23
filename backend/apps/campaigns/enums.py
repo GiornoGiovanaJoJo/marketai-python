@@ -2,8 +2,8 @@
 Campaign Enums - Django equivalent of Laravel Enums
 
 Laravel Enums:
-- App\Enums\CampaignStatus (int enum)
-- App\Enums\Marketplace (int enum)
+- App\\Enums\\CampaignStatus (int enum)
+- App\\Enums\\Marketplace (int enum)
 
 These are IntegerChoices in Django, stored as integers in the database.
 """
@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 class CampaignStatus(models.IntegerChoices):
     """
-    Campaign status enum - migrated from Laravel App\Enums\CampaignStatus
+    Campaign status enum - migrated from Laravel App\\Enums\\CampaignStatus
     
     Values:
     - ACTIVE (1): Campaign is currently running
@@ -28,7 +28,7 @@ class CampaignStatus(models.IntegerChoices):
 
 class Marketplace(models.IntegerChoices):
     """
-    Marketplace enum - migrated from Laravel App\Enums\Marketplace
+    Marketplace enum - migrated from Laravel App\\Enums\\Marketplace
     
     Values:
     - WILDBERRIES (1): Wildberries marketplace
