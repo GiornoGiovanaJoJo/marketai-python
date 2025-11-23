@@ -9,7 +9,7 @@ class Campaign(models.Model):
     """
     Campaign model - exact migration from Laravel MarketAI backend
     
-    Laravel Model: App\Models\Campaign
+    Laravel Model: App\\Models\\Campaign
     Table: campaigns
     
     Key features:
