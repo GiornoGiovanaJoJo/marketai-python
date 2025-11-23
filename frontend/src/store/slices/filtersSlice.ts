@@ -88,7 +88,7 @@ const filtersSlice = createSlice({
         },
 
         deletePreset: (state, action: PayloadAction<string>) => {
-            state.presets = state.presets.filter((p) => p.id !== action.payload)
+            state.presets = state.presets.filter((p: PresetConfig) => p.id !== action.payload)
             if (typeof window !== 'undefined') {
                 localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(state.presets))
             }
