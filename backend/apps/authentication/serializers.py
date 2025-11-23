@@ -21,7 +21,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         required=True,
         style={'input_type': 'password'}
     )
-    
+
     class Meta:
         model = User
         fields = (
@@ -31,18 +31,18 @@ class RegisterSerializer(serializers.ModelSerializer):
             'password',
             'password_confirm',
         )
-    
+
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError(
                 {"password": "Password fields didn't match."}
             )
         return attrs
-    
+
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
-        
+
         # Use custom manager's create_user method
         user = User.objects.create_user(
             phone=validated_data.pop('phone'),
@@ -50,52 +50,77 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=password,
             **validated_data
         )
-        
+
         return user
 
 
 class LoginSerializer(serializers.Serializer):
     """
     Serializer for user login
-    Migrated from Laravel AuthController::login
-    
-    Updated to support phone-based authentication
+    Supports both phone and email authentication
     """
-    phone = serializers.CharField(required=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.CharField(required=False, allow_blank=True)
     password = serializers.CharField(
         required=True,
         write_only=True,
         style={'input_type': 'password'}
     )
-    
+
     def validate(self, attrs):
         phone = attrs.get('phone')
+        email = attrs.get('email')
         password = attrs.get('password')
-        
-        if phone and password:
-            user = authenticate(
-                request=self.context.get('request'),
-                username=phone,  # We use phone as username
-                password=password
-            )
-            
-            if not user:
-                raise serializers.ValidationError(
-                    'Unable to log in with provided credentials.',
-                    code='authorization'
-                )
-            
-            if not user.is_active:
-                raise serializers.ValidationError(
-                    'User account is disabled.',
-                    code='authorization'
-                )
-        else:
+
+        # Check that at least one identifier is provided
+        if not phone and not email:
             raise serializers.ValidationError(
-                'Must include "phone" and "password".',
+                'Must include either "phone" or "email".',
                 code='authorization'
             )
-        
+
+        if not password:
+            raise serializers.ValidationError(
+                'Must include "password".',
+                code='authorization'
+            )
+
+        # Try to find user by phone or email
+        user = None
+
+        if phone:
+            try:
+                user = User.objects.get(phone=phone)
+            except User.DoesNotExist:
+                pass
+
+        if not user and email:
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                pass
+
+        # Validate user exists
+        if not user:
+            raise serializers.ValidationError(
+                'Unable to log in with provided credentials.',
+                code='authorization'
+            )
+
+        # Check password
+        if not user.check_password(password):
+            raise serializers.ValidationError(
+                'Unable to log in with provided credentials.',
+                code='authorization'
+            )
+
+        # Check if user is active
+        if not user.is_active:
+            raise serializers.ValidationError(
+                'User account is disabled.',
+                code='authorization'
+            )
+
         attrs['user'] = user
         return attrs
 
@@ -115,11 +140,11 @@ class LogoutSerializer(serializers.Serializer):
     Migrated from Laravel AuthController::logout
     """
     refresh = serializers.CharField(required=False)
-    
+
     def validate(self, attrs):
         self.token = attrs.get('refresh')
         return attrs
-    
+
     def save(self, **kwargs):
         if self.token:
             try:
