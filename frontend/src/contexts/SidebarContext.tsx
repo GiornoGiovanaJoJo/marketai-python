@@ -9,14 +9,15 @@ interface SidebarContextType {
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined)
 
+// Экспортируем контекст
+export { SidebarContext };  // ← Добавлено
+
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  // По умолчанию сайдбар виден на ПК
   const [isOpen, setIsOpen] = useState(() => {
     const saved = localStorage.getItem("sidebar-open")
     return saved !== null ? saved === "true" : true
   })
 
-  // Сохраняем состояние в localStorage
   useEffect(() => {
     localStorage.setItem("sidebar-open", String(isOpen))
   }, [isOpen])
@@ -39,7 +40,3 @@ export function useSidebar() {
   }
   return context
 }
-
-
-
-
