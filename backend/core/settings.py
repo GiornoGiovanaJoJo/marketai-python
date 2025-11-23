@@ -27,6 +27,10 @@ DEBUG = env('DJANGO_DEBUG', default=True)
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
+# Field Encryption Key (for encrypting sensitive data like API keys, tokens)
+# Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+FIELD_ENCRYPTION_KEY = env('FIELD_ENCRYPTION_KEY', default=None)
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
