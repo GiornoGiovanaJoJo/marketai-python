@@ -8,6 +8,7 @@ services:
       POSTGRES_DB: ${DB_NAME:-marketai}
       POSTGRES_USER: ${DB_USER:-marketai}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-marketai}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -23,7 +24,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: marketai_redis
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     ports:
@@ -36,25 +37,6 @@ services:
       timeout: 5s
       retries: 5
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: marketai_rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"  # Management UI
-    networks:
-      - marketai_network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
   backend:
     build:
       context: ./backend
@@ -63,16 +45,21 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120"
+             python manage.py shell -c 'from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username=\"admin\").exists() or User.objects.create_superuser(\"admin\", \"admin@example.com\", \"admin\")' &&
+             gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 4 --timeout 120 --reload --log-level debug"
     volumes:
       - ./backend:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - duckdb_data:/app/data
+      - logs_volume:/app/logs
     ports:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=core.settings
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,12 +74,16 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: marketai_celery_worker
-    command: celery -A core worker -l info --concurrency=4
+    command: celery -A core worker -l info --concurrency=2 --max-tasks-per-child=1000
     volumes:
       - ./backend:/app
       - duckdb_data:/app/data
+      - logs_volume:/app/logs
     env_file:
       - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - C_FORCE_ROOT=true
     depends_on:
       - backend
       - redis
@@ -109,8 +100,11 @@ services:
     command: celery -A core beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - ./backend:/app
+      - logs_volume:/app/logs
     env_file:
       - .env
+    environment:
+      - PYTHONUNBUFFERED=1
     depends_on:
       - backend
       - redis
@@ -132,7 +126,9 @@ services:
       - "3000:3000"
     environment:
       - VITE_API_URL=http://localhost:8000/api
+      - VITE_WS_URL=ws://localhost:8000/ws
       - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
     depends_on:
       - backend
     networks:
@@ -143,12 +139,21 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
-  rabbitmq_data:
+    driver: local
   static_volume:
+    driver: local
   media_volume:
+    driver: local
   duckdb_data:
+    driver: local
+  logs_volume:
+    driver: local
 
 networks:
   marketai_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
