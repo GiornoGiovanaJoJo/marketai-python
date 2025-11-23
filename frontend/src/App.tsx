@@ -7,8 +7,8 @@ import Register from '@/pages/Register'
 
 // Main pages  
 import Home from '@/pages/Home'
-import Dashboard from '@/pages/Dashboard'
-import Campaigns from '@/pages/Campaigns'
+import { Dashboard } from '@/pages/Dashboard'
+import { Campaigns } from '@/pages/Campaigns'
 
 // Advertising
 import AdvertisingRNP from '@/pages/AdvertisingRNP'
@@ -22,10 +22,10 @@ import MetricsChart from '@/pages/MetricsChart'
 import Heatmap from '@/pages/Heatmap'
 
 // Organization
-import Organization from '@/pages/Organization'
-import Employees from '@/pages/Employees'
+import { Organization } from '@/pages/Organization'
+import { Employees } from '@/pages/Employees'
 import Partners from '@/pages/Partners'
-import Access from '@/pages/Access'
+import { Access } from '@/pages/Access'
 
 // Automation
 import Automation from '@/pages/Automation'
