@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useState, useEffect } from 'react'
 
 interface SidebarState {
@@ -34,3 +35,8 @@ export function useSidebar(): SidebarState {
 
   return { isOpen, toggle, open, close }
 }
+=======
+// Экспортируем useSidebar из контекста
+export { useSidebar } from "@/contexts/SidebarContext"
+
+>>>>>>> 731b75b (scr)

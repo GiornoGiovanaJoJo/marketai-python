@@ -475,6 +475,7 @@ export const api = {
         if (!campaignId) {
             throw new ApiError(400, 'campaignId обязателен для запроса финансовых метрик')
         }
+
         try {
             const requestParams: Record<string, any> = { campaignId }
 

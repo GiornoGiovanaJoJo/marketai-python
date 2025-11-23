@@ -10,20 +10,25 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 215.4 16.3% 35%; /* Улучшена контрастность для светлой темы */
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+    --chart-1: 221.2 83.2% 53.3%;
+    --chart-2: 0 84.2% 60.2%;
+    --chart-3: 142.1 76.2% 36.3%;
+    --chart-4: 217.2 91.2% 59.8%;
+    --chart-5: 280.2 70.1% 50.7%;
   }
 
   .dark {
@@ -33,7 +38,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -45,7 +50,12 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 224.3 76.3% 94.9%;
+    --chart-1: 221.2 83.2% 53.3%;
+    --chart-2: 0 84.2% 60.2%;
+    --chart-3: 142.1 76.2% 36.3%;
+    --chart-4: 217.2 91.2% 59.8%;
+    --chart-5: 280.2 70.1% 50.7%;
   }
 }
 
@@ -55,52 +65,726 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Apple 2025 стиль - футуристичные эффекты */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.95); /* Увеличена непрозрачность для лучшей читаемости */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(102, 126, 234, 0.15); /* Более заметная граница */
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
+.dark .glass-effect {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+.gradient-text {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%); /* Более темные цвета для лучшей читаемости в светлой теме */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: contrast(1.1); /* Увеличиваем контрастность */
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400 dark:bg-gray-500;
+/* Альтернативный вариант для светлой темы - более темный градиент */
+:root .gradient-text {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #9333ea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.dark .gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
+.glow-effect {
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), 0 0 40px rgba(118, 75, 162, 0.2);
+}
+
+.dark .glow-effect {
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.5), 0 0 40px rgba(118, 75, 162, 0.3);
+}
+
+/* Стили для бокового меню */
+.sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.5);
+}
+
+/* Стили для элементов навигации */
+.nav-item {
+  position: relative;
+  color: hsl(var(--foreground));
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  border-radius: 0 3px 3px 0;
+  transition: height 0.3s ease;
+}
+
+.nav-item:hover::before,
+.nav-item-active::before {
+  height: 60%;
+}
+
+.nav-item:hover {
+  color: hsl(var(--foreground));
+  border-color: rgba(102, 126, 234, 0.2);
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.05) 0%, 
+    rgba(118, 75, 162, 0.05) 100%
+  );
+}
+
+.nav-item-active {
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.1) 0%, 
+    rgba(118, 75, 162, 0.1) 100%
+  );
+  border-color: rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+  color: hsl(var(--primary));
+  font-weight: 500;
+}
+
+.nav-item-chevron {
+  transition: transform 0.3s ease;
+}
+
+[data-state="open"] .nav-item-chevron {
+  transform: rotate(90deg);
+}
+
+/* Стили для выпадающего меню */
+.sidebar-dropdown {
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.dark .sidebar-dropdown {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.sidebar-dropdown-item {
+  padding: 0.5rem 1rem;
+  margin: 0.125rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.sidebar-dropdown-item:hover {
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.1) 0%, 
+    rgba(118, 75, 162, 0.1) 100%
+  ) !important;
+  transform: translateX(4px);
+}
+
+/* Анимация появления элементов меню */
 @keyframes slideIn {
   from {
-    transform: translateY(-10px);
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sidebar-nav > * {
+  animation: slideIn 0.3s ease forwards;
+}
+
+.sidebar-nav > *:nth-child(1) { animation-delay: 0.05s; }
+.sidebar-nav > *:nth-child(2) { animation-delay: 0.1s; }
+.sidebar-nav > *:nth-child(3) { animation-delay: 0.15s; }
+.sidebar-nav > *:nth-child(4) { animation-delay: 0.2s; }
+.sidebar-nav > *:nth-child(5) { animation-delay: 0.25s; }
+.sidebar-nav > *:nth-child(6) { animation-delay: 0.3s; }
+.sidebar-nav > *:nth-child(7) { animation-delay: 0.35s; }
+.sidebar-nav > *:nth-child(8) { animation-delay: 0.4s; }
+.sidebar-nav > *:nth-child(9) { animation-delay: 0.45s; }
+.sidebar-nav > *:nth-child(10) { animation-delay: 0.5s; }
+.sidebar-nav > *:nth-child(11) { animation-delay: 0.55s; }
+.sidebar-nav > *:nth-child(12) { animation-delay: 0.6s; }
+
+/* Эффект свечения при наведении */
+.nav-item:hover {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.nav-item-active:hover {
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+/* Стили для карточек организации */
+.organization-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.organization-card:hover {
+  border-color: rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Стили для диалога */
+[data-radix-dialog-content] {
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Улучшенные стили для диалога добавления счёта в светлой теме */
+:root [data-radix-dialog-content] {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(102, 126, 234, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dark [data-radix-dialog-content] {
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(102, 126, 234, 0.2);
+}
+
+/* Улучшенные стили для инпутов в форме добавления счёта */
+[data-radix-dialog-content] input:focus {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: hsl(var(--primary));
+  box-shadow: 
+    0 0 0 3px rgba(102, 126, 234, 0.1),
+    0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.dark [data-radix-dialog-content] input:focus {
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 
+    0 0 0 3px rgba(102, 126, 234, 0.2),
+    0 2px 8px rgba(102, 126, 234, 0.25);
+}
+
+/* Стили для кнопки добавления в диалоге */
+[data-radix-dialog-content] button[class*="bg-gradient"]:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 10px 25px rgba(102, 126, 234, 0.4),
+    0 5px 15px rgba(118, 75, 162, 0.3);
+}
+
+[data-radix-dialog-content] button[class*="bg-gradient"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(to right, #94a3b8, #cbd5e1);
+}
+
+/* Стили для выбранного плана */
+.organization-card[class*="glow-effect"] {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+  }
+}
+
+/* Улучшенные стили для инпутов */
+input[readonly] {
+  cursor: text;
+  background-color: hsl(var(--muted));
+}
+
+/* Улучшенная читаемость описаний и подписей */
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500; /* Немного увеличиваем вес для лучшей читаемости */
+}
+
+/* Улучшенная читаемость заголовков карточек */
+.card-title,
+[class*="CardTitle"] {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+/* Улучшенная читаемость описаний карточек */
+.card-description,
+[class*="CardDescription"] {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+/* Стили для badge success */
+.bg-green-500 {
+  background-color: rgb(34, 197, 94);
+}
+
+.bg-green-500:hover {
+  background-color: rgb(22, 163, 74);
+}
+
+/* Улучшенные стили для таблиц */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: hsl(var(--foreground)); /* Улучшена читаемость заголовков */
+}
+
+tbody tr {
+  transition: all 0.2s ease;
+}
+
+tbody tr:hover {
+  background-color: hsl(var(--muted) / 0.6); /* Более заметный фон при наведении */
+}
+
+tbody tr[class*="bg-primary"] {
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.12) 0%, 
+    rgba(118, 75, 162, 0.08) 100%
+  );
+}
+
+/* Улучшенная читаемость текста в таблицах */
+tbody td {
+  color: hsl(var(--foreground));
+}
+
+tbody td.text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+/* Стили для вкладок */
+[role="tablist"] button[data-state="active"] {
+  color: hsl(var(--primary));
+  border-bottom-width: 2px;
+  border-bottom-color: hsl(var(--primary));
+}
+
+/* Стили для Select */
+[role="combobox"] {
+  border-bottom: 1px solid hsl(var(--border));
+  border-radius: 0;
+}
+
+[role="combobox"]:focus {
+  border-bottom-color: hsl(var(--primary));
+}
+
+/* Стили для Switch */
+[role="switch"][data-state="checked"] {
+  background-color: hsl(var(--primary));
+}
+
+/* Стили для кнопок действий в таблице */
+button[data-state="open"] svg {
+  color: hsl(var(--primary));
+}
+
+/* Улучшенные стили для секции подключений */
+.connections-section {
+  background: rgba(255, 255, 255, 0.95); /* Более непрозрачный фон */
+  border: 1px solid rgba(102, 126, 234, 0.25); /* Более заметная граница */
+}
+
+.connections-section h3 {
+  color: hsl(var(--foreground)); /* Улучшена читаемость заголовков */
+  font-weight: 600;
+}
+
+/* Альтернативный вариант с градиентом (если нужен) */
+.connections-section h3.gradient-text {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #9333ea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Стили для круговых бейджей задач */
+.task-circle {
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Улучшенные стили для кнопок действий в таблице */
+button[class*="ghost"] {
+  transition: all 0.2s ease;
+}
+
+button[class*="ghost"]:hover {
+  background-color: hsl(var(--accent));
+  transform: translateY(-1px);
+}
+
+/* Стили для статистики задач */
+.task-stat-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Стили для страницы доступа */
+.access-section {
+  transition: all 0.2s ease;
+}
+
+.access-section:hover {
+  background: linear-gradient(135deg, 
+    rgba(102, 126, 234, 0.03) 0%, 
+    rgba(118, 75, 162, 0.03) 100%
+  );
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+/* Стили для чекбоксов в списке страниц */
+.access-page-item {
+  transition: all 0.2s ease;
+}
+
+.access-page-item:hover {
+  background-color: hsl(var(--accent) / 0.5);
+  transform: translateX(4px);
+}
+
+/* Стили для частично выбранных чекбоксов */
+[data-state="indeterminate"],
+.checkbox-indeterminate {
+  opacity: 0.7;
+  background-color: hsl(var(--primary) / 0.5);
+}
+
+/* Стили для страницы автоматизации */
+.automation-rule-card {
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  transition: all 0.3s ease;
+}
+
+.automation-rule-card:hover {
+  border-color: rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+.automation-active-rule {
+  border-left: 3px solid hsl(var(--primary));
+  transition: all 0.2s ease;
+}
+
+.automation-active-rule:hover {
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.05) 0%, 
+    rgba(118, 75, 162, 0.05) 100%
+  );
+  transform: translateX(4px);
+}
+
+/* Стили для блоков ЕСЛИ и ТО */
+.automation-block {
+  background: linear-gradient(135deg, 
+    rgba(102, 126, 234, 0.05) 0%, 
+    rgba(118, 75, 162, 0.05) 100%
+  );
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+/* Стили для карточек метрик дашборда */
+/* Светлая тема - улучшенная читаемость */
+:root:not(.dark) .dashboard-metric-card {
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.98) !important; /* Более непрозрачный фон для лучшей читаемости */
+  border: 1px solid rgba(102, 126, 234, 0.3) !important; /* Более заметная граница */
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.12),
+              0 2px 8px rgba(118, 75, 162, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+:root:not(.dark) .dashboard-metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2),
+              0 4px 16px rgba(118, 75, 162, 0.15);
+  border-color: rgba(102, 126, 234, 0.5) !important;
+  background: rgba(255, 255, 255, 1) !important; /* Полностью непрозрачный фон при наведении */
+}
+
+/* Темная тема - однотонный фон */
+.dark .dashboard-metric-card {
+  background: hsl(var(--card)) !important; /* Однотонный фон карточки */
+  border: 1px solid hsl(var(--border)) !important; /* Однотонная граница */
+}
+
+.dark .dashboard-metric-card:hover {
+  background: hsl(var(--card)) !important; /* Однотонный фон при наведении */
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Градиентная полоска только для светлой темы */
+:root:not(.dark) .dashboard-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.8) 0%, 
+    rgba(118, 75, 162, 0.8) 50%,
+    rgba(240, 147, 251, 0.8) 100%
+  );
+  opacity: 0.7;
+}
+
+:root:not(.dark) .dashboard-metric-card:hover::before {
+  opacity: 1;
+  height: 4px;
+}
+
+/* В темной теме убираем градиентную полоску */
+.dark .dashboard-metric-card::before {
+  display: none;
+}
+
+/* Улучшенная читаемость текста в карточках метрик */
+.dashboard-metric-card .text-2xl,
+.dashboard-metric-card .text-xl,
+.dashboard-metric-card .text-lg {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+}
+
+.dashboard-metric-card .text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+/* Стили для страницы ОПИУ Dashboard */
+/* Светлая тема - улучшенная читаемость */
+:root:not(.dark) .opi-dashboard-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(102, 126, 234, 0.25); /* Более заметная граница */
+  background: rgba(255, 255, 255, 0.98) !important; /* Улучшенный фон */
+}
+
+:root:not(.dark) .opi-dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.45);
+  background: rgba(255, 255, 255, 1) !important;
+}
+
+/* Темная тема - однотонный фон */
+.dark .opi-dashboard-card {
+  background: hsl(var(--card)) !important; /* Однотонный фон карточки */
+  border: 1px solid hsl(var(--border)) !important; /* Однотонная граница */
+}
+
+.dark .opi-dashboard-card:hover {
+  background: hsl(var(--card)) !important; /* Однотонный фон при наведении */
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Улучшенная читаемость текста в карточках ОПИУ */
+.opi-dashboard-card .text-lg,
+.opi-dashboard-card .text-xl {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+}
+
+.opi-dashboard-card .text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+/* Светлая тема - улучшенная читаемость */
+:root:not(.dark) .opi-small-metric-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(102, 126, 234, 0.2); /* Более заметная граница */
+  background: rgba(255, 255, 255, 0.98) !important; /* Улучшенный фон */
+}
+
+:root:not(.dark) .opi-small-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+  border-color: rgba(102, 126, 234, 0.35);
+  background: rgba(255, 255, 255, 1) !important;
+}
+
+/* Темная тема - однотонный фон */
+.dark .opi-small-metric-card {
+  background: hsl(var(--card)) !important; /* Однотонный фон карточки */
+  border: 1px solid hsl(var(--border)) !important; /* Однотонная граница */
+}
+
+.dark .opi-small-metric-card:hover {
+  background: hsl(var(--card)) !important; /* Однотонный фон при наведении */
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Улучшенная читаемость текста в маленьких карточках метрик */
+.opi-small-metric-card .text-2xl,
+.opi-small-metric-card .text-xl {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+}
+
+.opi-small-metric-card .text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+/* Стили для карточек метрик финотчёта */
+/* Светлая тема - улучшенная читаемость */
+:root:not(.dark) .financial-metric-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(102, 126, 234, 0.25); /* Более заметная граница */
+  background: rgba(255, 255, 255, 0.98) !important; /* Улучшенный фон */
+}
+
+:root:not(.dark) .financial-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.4);
+  background: rgba(255, 255, 255, 1) !important;
+}
+
+/* Темная тема - однотонный фон */
+.dark .financial-metric-card {
+  background: hsl(var(--card)) !important; /* Однотонный фон карточки */
+  border: 1px solid hsl(var(--border)) !important; /* Однотонная граница */
+}
+
+.dark .financial-metric-card:hover {
+  background: hsl(var(--card)) !important; /* Однотонный фон при наведении */
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Улучшенная читаемость текста в карточках финотчёта */
+.financial-metric-card .text-2xl,
+.financial-metric-card .text-xl,
+.financial-metric-card .text-lg {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+}
+
+.financial-metric-card .text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+/* Анимации для форм авторизации */
+@keyframes fade-in {
+  from {
     opacity: 0;
   }
   to {
-    transform: translateY(0);
     opacity: 1;
   }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.animate-slide-in {
-  animation: slideIn 0.3s ease-in-out;
+@keyframes slide-in-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in-0 {
+  animation: fade-in 0.5s ease-out;
+}
+
+.zoom-in-95 {
+  animation: zoom-in 0.5s ease-out;
+}
+
+.slide-in-from-top-1 {
+  animation: slide-in-from-top 0.3s ease-out;
+}
+

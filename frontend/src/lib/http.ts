@@ -1,6 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const API_BASE_URL = 'https://4895c9d9450e.vps.myjino.ru/api'
 const TOKEN_KEY = 'auth_token'
 
 // Создаем инстанс axios для Bearer-токенов
