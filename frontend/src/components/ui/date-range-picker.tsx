@@ -86,7 +86,6 @@ export interface DateRangePickerProps {
     startDate?: Date
     endDate?: Date
     onDateRangeChange?: (start: Date | undefined, end: Date | undefined) => void
-    placeholder?: string
     className?: string
 }
 
@@ -94,7 +93,6 @@ export function DateRangePicker({
                                     startDate,
                                     endDate,
                                     onDateRangeChange,
-                                    placeholder = "Выберите период",
                                     className,
                                 }: DateRangePickerProps) {
     const [date, setDate] = React.useState<DateRange | undefined>({
