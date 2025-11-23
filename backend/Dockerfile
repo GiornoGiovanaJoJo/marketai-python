@@ -24,8 +24,8 @@ RUN pip install --upgrade pip && \
 # Copy project
 COPY . /app/
 
-# Create directories
-RUN mkdir -p /app/staticfiles /app/media /app/data
+# Create directories (including logs directory)
+RUN mkdir -p /app/staticfiles /app/media /app/data /app/logs
 
 # Run as non-root user
 RUN useradd -m -u 1000 appuser && \
