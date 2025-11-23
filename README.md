@@ -4,9 +4,35 @@
 
 ## 📊 Статус проекта
 
-🟢 **Backend:** 100% готов  
-🟡 **Frontend:** 85% готов (миграция завершена!)  
+🜢 **Backend:** 100% готов  
+🜡 **Frontend:** 85% готов (миграция завершена!)  
 ✅ **Готов к тестированию через Docker**
+
+---
+
+## 📦 Быстрый старт (3 команды)
+
+### Linux/macOS:
+
+```bash
+git clone https://github.com/GiornoGiovanaJoJo/marketai-python.git
+cd marketai-python
+chmod +x docker-local.sh && ./docker-local.sh start
+```
+
+### Windows (PowerShell):
+
+```powershell
+git clone https://github.com/GiornoGiovanaJoJo/marketai-python.git
+cd marketai-python
+.\docker-local.ps1 start
+```
+
+**🎉 Готово!** Через 2-3 минуты:
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8000/api
+- **Admin:** http://localhost:8000/admin (`admin` / `admin`)
+- **API Docs:** http://localhost:8000/api/docs
 
 ---
 
@@ -18,41 +44,47 @@
 
 ---
 
-## 🚀 Быстрый старт с Docker
+## 🔧 Управление сервисами
 
-### 1. Предварительные требования
-
-- **Docker Desktop** установлен и запущен
-- **Git** для клонирования
-- **8 GB RAM** минимум
-
-### 2. Запуск
+### Доступные команды:
 
 ```bash
-# Клонировать и перейти в ветку миграции
-git clone https://github.com/GiornoGiovanaJoJo/marketai-python.git
-cd marketai-python
-git checkout feature/full-frontend-migration
+# Linux/macOS
+./docker-local.sh [command]
 
-# Создать .env
-cp .env.example .env
-
-# Запустить всё
-docker-compose up -d
-
-# Создать суперюзера
-docker-compose exec backend python manage.py createsuperuser
+# Windows
+.\docker-local.ps1 [command]
 ```
 
-### 3. Открыть приложение
+| Команда | Описание |
+|---------|----------|
+| `start` | Запустить все сервисы |
+| `stop` | Остановить все сервисы |
+| `restart` | Перезапустить все |
+| `restart-one <service>` | Перезапустить один сервис |
+| `logs` | Показать логи |
+| `status` | Статус сервисов |
+| `shell` | Django shell |
+| `migrate` | Применить миграции |
+| `test` | Запустить тесты |
+| `clean` | Полная очистка |
+| `help` | Показать справку |
 
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:8000/api/
-- **API Docs (Swagger):** http://localhost:8000/api/docs/
-- **Admin Panel:** http://localhost:8000/admin/
-- **RabbitMQ UI:** http://localhost:15672 (guest/guest)
+### Примеры:
 
-📖 **Полная инструкция:** [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)
+```bash
+# Посмотреть логи
+./docker-local.sh logs
+
+# Перезапустить backend
+./docker-local.sh restart-one backend
+
+# Django shell
+./docker-local.sh shell
+
+# Запустить тесты
+./docker-local.sh test
+```
 
 ---
 
@@ -64,9 +96,10 @@ docker-compose exec backend python manage.py createsuperuser
 - **Django REST Framework:** 3.14
 - **PostgreSQL:** 16
 - **Redis:** 7
-- **Celery:** 5.3 + RabbitMQ 3
+- **Celery:** 5.3
 - **JWT Authentication:** djangorestframework-simplejwt
 - **API Docs:** drf-spectacular (Swagger/ReDoc)
+- **DuckDB:** 1.1.3 - аналитика
 
 ### Frontend (полная миграция завершена ✅)
 - **React:** 18.2
@@ -85,7 +118,7 @@ docker-compose exec backend python manage.py createsuperuser
 
 ### Backend - 100% ✅
 - [x] Базовая структура Django
-- [x] Docker конфигурация (PostgreSQL, Redis, RabbitMQ)
+- [x] Docker конфигурация (PostgreSQL, Redis)
 - [x] JWT аутентификация
 - [x] CRUD кампаний
 - [x] Интеграция с Wildberries API
@@ -94,7 +127,7 @@ docker-compose exec backend python manage.py createsuperuser
 - [x] API документация (Swagger/ReDoc)
 - [x] Тесты (pytest)
 
-### Frontend - 85% 🟡 (миграция завершена!)
+### Frontend - 85% 🜡 (миграция завершена!)
 - [x] React + TypeScript + Vite
 - [x] Tailwind CSS + Radix UI
 - [x] React Router (26 маршрутов)
@@ -122,10 +155,12 @@ docker-compose exec backend python manage.py createsuperuser
 
 ## 📚 Документация
 
-- 🐳 [Docker гайд](./DOCKER_GUIDE.md) - полная инструкция по запуску
-- 📝 [План миграции Frontend](./FRONTEND_MIGRATION_PLAN.md)
-- 🛠️ [Скрипты миграции](./scripts/README.md)
-- 💻 [API документация](http://localhost:8000/api/docs/) (после запуска)
+- 🧪 **[TESTING.md](./TESTING.md)** - Краткая инструкция по тестированию
+- 🐳 **[DOCKER_GUIDE.md](./DOCKER_GUIDE.md)** - Полная инструкция по Docker
+- 🚀 **[QUICK_START.md](./QUICK_START.md)** - Быстрый старт
+- 📝 **[FRONTEND_MIGRATION_PLAN.md](./FRONTEND_MIGRATION_PLAN.md)** - План миграции frontend
+- 🛠️ **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Руководство по разработке
+- 💻 **[API документация](http://localhost:8000/api/docs/)** (после запуска)
 
 ---
 
@@ -174,67 +209,59 @@ docker-compose exec backend python manage.py createsuperuser
 
 ---
 
-## 🔧 Полезные команды
-
-### Docker
-```bash
-# Запустить
-docker-compose up -d
-
-# Логи
-docker-compose logs -f backend
-docker-compose logs -f frontend
-
-# Перезапустить
-docker-compose restart backend
-docker-compose restart frontend
-
-# Остановить
-docker-compose down
-```
-
-### Backend
-```bash
-python manage.py makemigrations
-python manage.py migrate
-python manage.py test
-python manage.py shell
-python manage.py create_test_data
-
-# Celery
-celery -A core worker -l info
-celery -A core beat -l info
-```
-
-### Frontend
-```bash
-npm run dev          # Dev сервер
-npm run build        # Production сборка
-npm run lint         # ESLint
-npm run type-check   # TypeScript
-```
-
----
-
 ## 🌟 Особенности
 
 - ✅ **Полная миграция frontend** из Laravel/Vue на Django/React
 - ✅ **Docker Compose** для лёгкого запуска полного стека
+- ✅ **Автоматические скрипты** для запуска (Linux/macOS/Windows)
 - ✅ **JWT аутентификация** с refresh tokens
 - ✅ **Swagger/ReDoc** интерактивная API документация
 - ✅ **Celery** для фоновых задач и планировщика
 - ✅ **TypeScript** для типобезопасности frontend
 - ✅ **Redux** для управления состоянием
 - ✅ **Tailwind CSS + Radix UI** для современного UI
+- ✅ **DuckDB** для аналитики
 
 ---
 
-## 🐛 Известные проблемы
+## 🐛 Решение проблем
 
-1. **API эндпоинты** - Нужно обновить `src/services/` под Django URL
-2. **TypeScript ошибки** - Возможны мелкие ошибки типов после миграции
+### Порты заняты?
+```bash
+# Освободите порты 3000, 8000, 5432, 6379
+./docker-local.sh stop
+```
 
-👉 **Решения см. в** [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)
+### Что-то не работает?
+```bash
+# Полная перезагрузка
+./docker-local.sh clean
+./docker-local.sh start
+```
+
+### Проверьте логи:
+```bash
+./docker-local.sh logs
+```
+
+👉 **Подробное решение проблем:** [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)
+
+---
+
+## 🧪 Тестирование
+
+```bash
+# Backend тесты
+./docker-local.sh test
+
+# Или вручную
+docker-compose exec backend pytest -v
+
+# С coverage
+docker-compose exec backend pytest --cov=. --cov-report=html
+```
+
+📖 **Подробное руководство:** [TESTING.md](./TESTING.md)
 
 ---
 
@@ -245,6 +272,8 @@ npm run type-check   # TypeScript
 3. Commit изменения (`git commit -m 'feat: Add amazing feature'`)
 4. Push в branch (`git push origin feature/amazing-feature`)
 5. Откройте Pull Request
+
+📖 **Подробнее:** [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ---
 
@@ -262,4 +291,4 @@ MIT License
 
 ---
 
-**Статус:** 🟢 Backend 100% | 🟡 Frontend 85% | ✅ Готов к тестированию!
+**Статус:** 🜢 Backend 100% | 🜡 Frontend 85% | ✅ Готов к тестированию!
