@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { api, type User } from '@/lib/api'
 import { getToken, removeToken } from '@/lib/http'
 
