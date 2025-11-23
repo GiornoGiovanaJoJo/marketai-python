@@ -8,9 +8,9 @@ $SOURCE_REPO = "https://raw.githubusercontent.com/GiornoGiovanaJoJo/marketai-fro
 $TARGET_BASE = "frontend/src/components"
 
 # Colors for output
-function Write-Success { param($msg) Write-Host "✅ $msg" -ForegroundColor Green }
-function Write-Info { param($msg) Write-Host "ℹ️  $msg" -ForegroundColor Cyan }
-function Write-Error { param($msg) Write-Host "❌ $msg" -ForegroundColor Red }
+function Write-Success { param($msg) Write-Host "[SUCCESS] $msg" -ForegroundColor Green }
+function Write-Info { param($msg) Write-Host "[INFO] $msg" -ForegroundColor Cyan }
+function Write-ErrorMsg { param($msg) Write-Host "[ERROR] $msg" -ForegroundColor Red }
 
 Write-Info "Starting UI Components Migration..."
 Write-Info "Source: marketai-front repository"
@@ -26,9 +26,9 @@ Write-Success "Directories created"
 Write-Host ""
 
 # ============================================
-# BATCH 1: UI Components - Forms & Inputs (8 files)
+# BATCH 1: UI Components - Forms and Inputs (8 files)
 # ============================================
-Write-Info "BATCH 1: Forms & Inputs (8 files)"
+Write-Info "BATCH 1: Forms and Inputs (8 files)"
 $batch1 = @(
     "button.tsx",
     "input.tsx",
@@ -54,7 +54,7 @@ foreach ($file in $batch1) {
         Write-Host " Done" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to download $file"
+        Write-ErrorMsg "Failed to download $file"
         Write-Host "  Error: $_" -ForegroundColor Red
     }
 }
@@ -63,9 +63,9 @@ Write-Success "Batch 1 completed: $completed/$total files"
 Write-Host ""
 
 # ============================================
-# BATCH 2: UI Components - Layouts & Containers (5 files)
+# BATCH 2: UI Components - Layouts and Containers (5 files)
 # ============================================
-Write-Info "BATCH 2: Layouts & Containers (5 files)"
+Write-Info "BATCH 2: Layouts and Containers (5 files)"
 $batch2 = @(
     "card.tsx",
     "dialog.tsx",
@@ -88,7 +88,7 @@ foreach ($file in $batch2) {
         Write-Host " Done" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to download $file"
+        Write-ErrorMsg "Failed to download $file"
         Write-Host "  Error: $_" -ForegroundColor Red
     }
 }
@@ -121,7 +121,7 @@ foreach ($file in $batch3) {
         Write-Host " Done" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to download $file"
+        Write-ErrorMsg "Failed to download $file"
         Write-Host "  Error: $_" -ForegroundColor Red
     }
 }
@@ -130,9 +130,9 @@ Write-Success "Batch 3 completed: $completed/$total files"
 Write-Host ""
 
 # ============================================
-# BATCH 4: UI Components - Navigation & Notifications (5 files)
+# BATCH 4: UI Components - Navigation and Notifications (5 files)
 # ============================================
-Write-Info "BATCH 4: Navigation & Notifications (5 files)"
+Write-Info "BATCH 4: Navigation and Notifications (5 files)"
 $batch4 = @(
     "dropdown-menu.tsx",
     "calendar.tsx",
@@ -155,7 +155,7 @@ foreach ($file in $batch4) {
         Write-Host " Done" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to download $file"
+        Write-ErrorMsg "Failed to download $file"
         Write-Host "  Error: $_" -ForegroundColor Red
     }
 }
@@ -187,7 +187,7 @@ foreach ($file in $batch5) {
         Write-Host " Done" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to download $file"
+        Write-ErrorMsg "Failed to download $file"
         Write-Host "  Error: $_" -ForegroundColor Red
     }
 }
@@ -196,9 +196,9 @@ Write-Success "Batch 5 completed: $completed/$total files"
 Write-Host ""
 
 # ============================================
-# BATCH 6: Business Components - Management & Filters (3 files)
+# BATCH 6: Business Components - Management and Filters (3 files)
 # ============================================
-Write-Info "BATCH 6: Business Components - Management & Filters (3 files)"
+Write-Info "BATCH 6: Business Components - Management and Filters (3 files)"
 $batch6 = @(
     "AccessManagement.tsx",
     "BlockVisibilityManager.tsx",
@@ -219,7 +219,7 @@ foreach ($file in $batch6) {
         Write-Host " Done" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to download $file"
+        Write-ErrorMsg "Failed to download $file"
         Write-Host "  Error: $_" -ForegroundColor Red
     }
 }
@@ -231,16 +231,16 @@ Write-Host ""
 # Summary
 # ============================================
 Write-Host ""
-Write-Host "===========================================" -ForegroundColor Yellow
+Write-Host "=========================================" -ForegroundColor Yellow
 Write-Success "Migration completed!"
-Write-Host "===========================================" -ForegroundColor Yellow
+Write-Host "=========================================" -ForegroundColor Yellow
 Write-Host ""
 Write-Info "Next steps:"
 Write-Host "  1. Review migrated components in $TARGET_BASE"
 Write-Host "  2. Run: npm install (to ensure all dependencies)"
 Write-Host "  3. Run: npm run build (to check TypeScript)"
 Write-Host "  4. Run: npm run lint (to check code quality)"
-Write-Host "  5. Commit changes: git add . && git commit -m 'feat: Migrate UI components from marketai-front'"
-Write-Host "  6. Push: git push origin feature/migrate-ui-components"
+Write-Host "  5. Commit changes: git add . `&`& git commit -m 'feat: Migrate UI components from marketai-front'"
+Write-Host "  6. Push: git push origin feat/ui-components"
 Write-Host ""
-Write-Success "All done! 🎉"
+Write-Success "All done!"
