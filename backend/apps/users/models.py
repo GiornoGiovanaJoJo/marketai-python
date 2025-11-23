@@ -1,6 +1,45 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+
+class UserManager(BaseUserManager):
+    """
+    Custom user manager for phone-based authentication
+    """
+    
+    def create_user(self, phone, first_name, password=None, **extra_fields):
+        """
+        Create and save a regular user with the given phone and password.
+        """
+        if not phone:
+            raise ValueError(_('The Phone number must be set'))
+        if not first_name:
+            raise ValueError(_('The Name must be set'))
+        
+        # Generate username from phone if not provided
+        if 'username' not in extra_fields or not extra_fields.get('username'):
+            extra_fields['username'] = phone
+        
+        user = self.model(phone=phone, first_name=first_name, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, phone, first_name, password=None, **extra_fields):
+        """
+        Create and save a superuser with the given phone and password.
+        """
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+        
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError(_('Superuser must have is_staff=True.'))
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError(_('Superuser must have is_superuser=True.'))
+        
+        return self.create_user(phone, first_name, password, **extra_fields)
 
 
 class User(AbstractUser):
@@ -62,6 +101,9 @@ class User(AbstractUser):
     
     # We don't use last_name in Laravel version
     last_name = models.CharField(_('last name'), max_length=150, blank=True)
+    
+    # Use custom manager
+    objects = UserManager()
     
     # Authentication configuration
     USERNAME_FIELD = 'phone'  # Login with phone
