@@ -25,12 +25,9 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'email',
-            'username',
-            'first_name',
-            'last_name',
             'phone',
-            'company',
+            'first_name',
+            'email',
             'password',
             'password_confirm',
         )
@@ -46,9 +43,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
         
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
+        # Use custom manager's create_user method
+        user = User.objects.create_user(
+            phone=validated_data.pop('phone'),
+            first_name=validated_data.pop('first_name'),
+            password=password,
+            **validated_data
+        )
         
         return user
 
@@ -57,8 +58,10 @@ class LoginSerializer(serializers.Serializer):
     """
     Serializer for user login
     Migrated from Laravel AuthController::login
+    
+    Updated to support phone-based authentication
     """
-    email = serializers.EmailField(required=True)
+    phone = serializers.CharField(required=True)
     password = serializers.CharField(
         required=True,
         write_only=True,
@@ -66,13 +69,13 @@ class LoginSerializer(serializers.Serializer):
     )
     
     def validate(self, attrs):
-        email = attrs.get('email')
+        phone = attrs.get('phone')
         password = attrs.get('password')
         
-        if email and password:
+        if phone and password:
             user = authenticate(
                 request=self.context.get('request'),
-                username=email,  # We use email as username
+                username=phone,  # We use phone as username
                 password=password
             )
             
@@ -89,7 +92,7 @@ class LoginSerializer(serializers.Serializer):
                 )
         else:
             raise serializers.ValidationError(
-                'Must include "email" and "password".',
+                'Must include "phone" and "password".',
                 code='authorization'
             )
         
