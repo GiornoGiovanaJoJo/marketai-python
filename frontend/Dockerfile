@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with npm ci (faster and deterministic with package-lock.json)
-RUN npm ci
+# Install dependencies with npm install (will generate package-lock.json if missing)
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -25,7 +25,7 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY . .
 
