@@ -1,4 +1,4 @@
-﻿from rest_framework import serializers
+from rest_framework import serializers
 from .models import Campaign
 from .enums import CampaignStatus
 import logging
@@ -22,6 +22,7 @@ class CampaignSerializer(serializers.ModelSerializer):
             'user',
             'user_email',
             'name',
+            'description',  # NEW: Added description field
             'key',
             'marketplace',
             'marketplace_display',
@@ -32,8 +33,9 @@ class CampaignSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id', 'user', 'user_email', 'created_at', 'updated_at')
         extra_kwargs = {
-            # Разрешаем частичные обновления — поля необязательны при PUT/PATCH
+            # FIXED: Allow optional fields for PUT/PATCH to prevent 'required' errors
             'name': {'required': False},
+            'description': {'required': False},
             'key': {'required': False},
             'marketplace': {'required': False},
             'status': {'required': False},
@@ -69,14 +71,16 @@ class CampaignCreateSerializer(serializers.ModelSerializer):
         model = Campaign
         fields = (
             'name',
+            'description',  # NEW: Added description
             'key',
             'marketplace',
         )
-        # При создании — все поля обязательны
+        # При создании — только name и key обязательны
         extra_kwargs = {
             'name': {'required': True},
             'key': {'required': True},
-            'marketplace': {'required': True},
+            'description': {'required': False},  # Optional
+            'marketplace': {'required': False},  # Optional
         }
 
 
@@ -89,13 +93,15 @@ class CampaignUpdateSerializer(serializers.ModelSerializer):
         model = Campaign
         fields = (
             'name',
+            'description',  # NEW: Added description
             'key',
             'marketplace',
             'status',
         )
-        # При обновлении — все поля необязательны
+        # FIXED: При обновлении — все поля необязательны
         extra_kwargs = {
             'name': {'required': False},
+            'description': {'required': False},
             'key': {'required': False},
             'marketplace': {'required': False},
             'status': {'required': False},
@@ -130,6 +136,7 @@ class CampaignListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'description',  # NEW: Added description
             'key',
             'marketplace',
             'marketplace_display',
