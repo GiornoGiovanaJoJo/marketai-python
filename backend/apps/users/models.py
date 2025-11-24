@@ -8,14 +8,13 @@ class UserManager(BaseUserManager):
     Custom user manager for phone-based authentication
     """
     
-    def create_user(self, phone, first_name, password=None, **extra_fields):
+    def create_user(self, phone, password=None, first_name='', **extra_fields):
         """
         Create and save a regular user with the given phone and password.
+        first_name is optional (default empty string).
         """
         if not phone:
             raise ValueError(_('The Phone number must be set'))
-        if not first_name:
-            raise ValueError(_('The Name must be set'))
         
         # Generate username from phone if not provided
         if 'username' not in extra_fields or not extra_fields.get('username'):
@@ -29,6 +28,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, phone, first_name, password=None, **extra_fields):
         """
         Create and save a superuser with the given phone and password.
+        first_name is required for superuser.
         """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -39,7 +39,10 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError(_('Superuser must have is_superuser=True.'))
         
-        return self.create_user(phone, first_name, password, **extra_fields)
+        if not first_name:
+            raise ValueError(_('Superuser must have a first_name'))
+        
+        return self.create_user(phone, password, first_name, **extra_fields)
 
 
 class User(AbstractUser):
@@ -50,7 +53,6 @@ class User(AbstractUser):
     - Phone is the primary unique identifier (not username)
     - Email is optional but unique
     - Both email and phone can be verified independently
-    - Removed company and avatar fields (not in Laravel)
     """
     
     # Override email to make it nullable but unique when present
@@ -96,8 +98,8 @@ class User(AbstractUser):
         blank=True,
     )
     
-    # Use first_name as 'name' field (matching Laravel)
-    first_name = models.CharField(_('name'), max_length=150)
+    # Use first_name as 'name' field (matching Laravel) - now optional
+    first_name = models.CharField(_('name'), max_length=150, blank=True)
     
     # We don't use last_name in Laravel version
     last_name = models.CharField(_('last name'), max_length=150, blank=True)
@@ -120,7 +122,7 @@ class User(AbstractUser):
         ]
 
     def __str__(self):
-        return f"{self.phone} - {self.first_name}"
+        return f"{self.phone} - {self.first_name or 'No name'}"
 
     @property
     def name(self):
