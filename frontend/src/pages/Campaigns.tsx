@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { api, Campaign, Marketplace, CampaignStatus } from '@/lib/api'
+import campaignsService from '@/services/campaigns.service'
 
 const marketplaceLabels: Record<Marketplace, string> = {
   [Marketplace.Wildberries]: 'Wildberries',
@@ -93,7 +94,7 @@ export function Campaigns() {
   const loadCampaigns = async () => {
     try {
       setLoading(true)
-      const data = await api.getCampaigns()
+      const data = await campaignsService.getAll()
       data.forEach(el => {
         el.key = "";
       })
@@ -111,7 +112,7 @@ export function Campaigns() {
 
   const handleCreate = async () => {
     try {
-      await api.createCampaign({
+      await campaignsService.create({
         name: formData.name,
         key: formData.key,
         marketplace: formData.marketplace,
@@ -138,7 +139,7 @@ export function Campaigns() {
     if (!selectedCampaign) return
 
     try {
-      await api.updateCampaign(selectedCampaign.id, {
+      await campaignsService.update(selectedCampaign.id, {
         name: formData.name,
         key: formData.key,
         marketplace: formData.marketplace,
@@ -166,7 +167,7 @@ export function Campaigns() {
     if (!confirm('Вы уверены, что хотите удалить эту кампанию?')) return
 
     try {
-      await api.deleteCampaign(campaignId)
+      await campaignsService.delete(campaignId)
 
       toast({
         title: 'Успешно',
@@ -190,7 +191,7 @@ export function Campaigns() {
           ? CampaignStatus.Inactive
           : CampaignStatus.Active
 
-      await api.updateCampaign(campaign.id, { status: newStatus })
+      await campaignsService.update(campaign.id, { status: newStatus })
 
       toast({
         title: 'Успешно',

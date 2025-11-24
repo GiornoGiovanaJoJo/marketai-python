@@ -21,7 +21,7 @@ class CampaignModelTests(TestCase):
             user=self.user,
             name='Test Campaign',
             marketplace=Campaign.MarketplaceChoices.WILDBERRIES,
-            status=Campaign.StatusChoices.ACTIVE,
+            status=CampaignStatus.ACTIVE,
             budget=Decimal('10000.00'),
             spent=Decimal('5000.00'),
             impressions=10000,

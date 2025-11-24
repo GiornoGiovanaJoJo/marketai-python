@@ -55,8 +55,8 @@ class Campaign(models.Model):
     
     # Explicitly disable automatic timestamps (matching Laravel: $timestamps = false)
     # We keep the fields but don't auto-update them
-    # created_at = models.DateTimeField(auto_now_add=True)  # Commented out
-    # updated_at = models.DateTimeField(auto_now=True)      # Commented out
+    created_at = models.DateTimeField(auto_now_add=True)  # Commented out
+    updated_at = models.DateTimeField(auto_now=True)      # Commented out
     
     class Meta:
         db_table = 'campaigns'

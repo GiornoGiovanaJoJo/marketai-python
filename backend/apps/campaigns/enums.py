@@ -18,12 +18,18 @@ class CampaignStatus(models.IntegerChoices):
     
     Values:
     - ACTIVE (1): Campaign is currently running
-    - INACTIVE (2): Campaign is not active (default state)
+    - INACTIVE (2): Campaign is not active (paused state)
     - ERROR (3): Campaign has encountered an error
+    - PAUSED (4): Campaign is manually paused
+    - STOPPED (5): Campaign is stopped
+    - DRAFT (6): Campaign is in draft state
     """
     ACTIVE = 1, _('Active')
     INACTIVE = 2, _('Inactive')
     ERROR = 3, _('Error')
+    PAUSED = 4, _('Paused')
+    STOPPED = 5, _('Stopped')
+    DRAFT = 6, _('Draft')
 
 
 class Marketplace(models.IntegerChoices):

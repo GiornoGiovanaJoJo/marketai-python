@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useToast } from '@/components/ui/use-toast'
-import { api, ApiError, Campaign } from '@/lib/api'
+import campaignsService from '@/services/campaigns.service'
+import { Campaign } from '@/types/campaign'
 
 export function useCampaigns() {
     const [campaigns, setCampaigns] = useState<Campaign[]>([])
@@ -12,7 +13,7 @@ export function useCampaigns() {
         const loadCampaigns = async () => {
             setIsLoading(true)
             try {
-                const data = await api.getCampaigns()
+                const data = await campaignsService.getAll()
                 setCampaigns(data)
 
                 if (data.length > 0) {
@@ -20,10 +21,9 @@ export function useCampaigns() {
                 }
             } catch (err) {
                 console.error('Failed to load campaigns:', err)
-                const errorMsg = err instanceof ApiError ? err.message : 'Не удалось загрузить кампании'
                 toast({
-                    title: 'Ошибка',
-                    description: errorMsg,
+                    title: 'шибка',
+                    description: 'е удалось загрузить кампании',
                     variant: 'destructive',
                 })
             } finally {

@@ -106,9 +106,9 @@ class WildberriesService:
         Map Wildberries status to local status
         """
         status_map = {
-            'active': Campaign.StatusChoices.ACTIVE,
-            'paused': Campaign.StatusChoices.PAUSED,
-            'stopped': Campaign.StatusChoices.COMPLETED,
-            'archived': Campaign.StatusChoices.ARCHIVED,
+            'active': CampaignStatus.ACTIVE,
+            'paused': CampaignStatus.PAUSED,
+            'stopped': CampaignStatus.COMPLETED,
+            'archived': CampaignStatus.ARCHIVED,
         }
-        return status_map.get(wb_status, Campaign.StatusChoices.DRAFT)
+        return status_map.get(wb_status, CampaignStatus.DRAFT)

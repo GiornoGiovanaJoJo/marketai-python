@@ -1,8 +1,16 @@
-from django.db.models import Sum, Count, Avg, Q, F, Max
+"""
+Statistics Service Layer
+Migrated from Laravel StatisticService
+Provides comprehensive statistics calculations for campaigns, products, and users
+"""
+
+from django.db.models import Sum, Count, Avg, Q, F, Max, Min
 from django.utils import timezone
 from datetime import timedelta, datetime
 from decimal import Decimal
+from typing import Dict, Any, Optional, List
 from apps.campaigns.models import Campaign
+from apps.campaigns.enums import CampaignStatus
 from .models import CampaignStatistic, ProductStatistic, DailyUserStatistic
 import logging
 
@@ -14,347 +22,390 @@ class StatisticsService:
     Service for statistics calculations
     Migrated from Laravel StatisticService
     """
-    
+
     def __init__(self, user):
         self.user = user
-    
-    def get_financial_report(self, start_date=None, end_date=None):
+
+    def get_financial_report(
+            self,
+            start_date: Optional[datetime] = None,
+            end_date: Optional[datetime] = None,
+            marketplace: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
-        Generate financial report for user's campaigns
-        Migrated from Laravel: GET /api/statistics/financial-report
+        Get comprehensive financial report for user campaigns
+
+        Args:
+            start_date: Start date for the report period
+            end_date: End date for the report period
+            marketplace: Optional filter by marketplace
+
+        Returns:
+            Dict containing summary, period, by_marketplace, and by_status data
         """
-        # Get user's campaigns
+        # Default date range: last 30 days
+        if not start_date:
+            start_date = timezone.now() - timedelta(days=30)
+        if not end_date:
+            end_date = timezone.now()
+
+        # Base queryset
         campaigns = Campaign.objects.filter(user=self.user)
-        
-        # Apply date filters if provided
-        if start_date:
-            campaigns = campaigns.filter(created_at__gte=start_date)
-        if end_date:
-            campaigns = campaigns.filter(created_at__lte=end_date)
-        
-        # Aggregate statistics
-        stats = campaigns.aggregate(
-            total_budget=Sum('budget'),
+
+        # Optional marketplace filter
+        if marketplace:
+            campaigns = campaigns.filter(marketplace=marketplace)
+
+        # Get statistics for campaigns
+        stats_data = CampaignStatistic.objects.filter(
+            campaign__user=self.user,
+            date__gte=start_date,
+            date__lte=end_date
+        )
+
+        # Optional marketplace filter on statistics
+        if marketplace:
+            stats_data = stats_data.filter(campaign__marketplace=marketplace)
+
+        aggregated = stats_data.aggregate(
             total_spent=Sum('spent'),
             total_revenue=Sum('revenue'),
-            total_campaigns=Count('id'),
-            active_campaigns=Count('id', filter=Q(status=Campaign.StatusChoices.ACTIVE)),
-            avg_ctr=Avg('clicks') / Avg('impressions') * 100 if campaigns.exists() else 0,
+            total_impressions=Sum('impressions'),
+            total_clicks=Sum('clicks'),
         )
-        
+
+        # Safe conversion to float
+        total_spent = float(aggregated.get('total_spent') or 0)
+        total_revenue = float(aggregated.get('total_revenue') or 0)
+        total_impressions = int(aggregated.get('total_impressions') or 0)
+        total_clicks = int(aggregated.get('total_clicks') or 0)
+
         # Calculate ROI
-        total_spent = float(stats['total_spent'] or 0)
-        total_revenue = float(stats['total_revenue'] or 0)
-        
         if total_spent > 0:
             roi = ((total_revenue - total_spent) / total_spent) * 100
         else:
             roi = 0
-        
-        # Get campaigns by marketplace
-        marketplace_stats = campaigns.values('marketplace').annotate(
-            count=Count('id'),
-            revenue=Sum('revenue'),
-            spent=Sum('spent'),
+
+        # Aggregate statistics by marketplace
+        by_marketplace = self._aggregate_by_marketplace(
+            start_date=start_date,
+            end_date=end_date
         )
-        
-        # Get campaigns by status
-        status_stats = campaigns.values('status').annotate(
-            count=Count('id'),
+
+        # Aggregate statistics by status
+        by_status = self._aggregate_by_status(
+            start_date=start_date,
+            end_date=end_date
         )
-        
+
         return {
             'summary': {
-                'total_campaigns': stats['total_campaigns'],
-                'active_campaigns': stats['active_campaigns'],
-                'total_budget': float(stats['total_budget'] or 0),
-                'total_spent': total_spent,
-                'total_revenue': total_revenue,
+                'total_campaigns': campaigns.count(),
+                'active_campaigns': campaigns.filter(status=CampaignStatus.ACTIVE).count(),
+                'paused_campaigns': campaigns.filter(status=CampaignStatus.PAUSED).count(),
+                'total_spent': round(total_spent, 2),
+                'total_revenue': round(total_revenue, 2),
                 'roi': round(roi, 2),
+                'total_impressions': total_impressions,
+                'total_clicks': total_clicks,
+                'ctr': round((total_clicks / total_impressions * 100) if total_impressions > 0 else 0, 2),
             },
-            'by_marketplace': list(marketplace_stats),
-            'by_status': list(status_stats),
             'period': {
-                'start_date': start_date,
-                'end_date': end_date,
-            }
+                'start_date': start_date.isoformat(),
+                'end_date': end_date.isoformat(),
+            },
+            'by_marketplace': by_marketplace,
+            'by_status': by_status,
         }
-    
-    def get_campaign_performance(self, campaign_id):
+
+    def _aggregate_by_marketplace(
+            self,
+            start_date: datetime,
+            end_date: datetime
+    ) -> Dict[str, Dict[str, Any]]:
         """
-        Get detailed performance metrics for a campaign
+        Aggregate statistics grouped by marketplace
+
+        Args:
+            start_date: Start date for aggregation
+            end_date: End date for aggregation
+
+        Returns:
+            Dict with marketplace as key and stats as value
         """
+        campaigns = Campaign.objects.filter(user=self.user)
+
+        # Get unique marketplaces for this user
+        marketplaces = campaigns.values_list('marketplace', flat=True).distinct()
+
+        by_marketplace = {}
+
+        for marketplace in marketplaces:
+            if not marketplace:  # Skip None/empty marketplaces
+                continue
+
+            m_stats = CampaignStatistic.objects.filter(
+                campaign__user=self.user,
+                campaign__marketplace=marketplace,
+                date__gte=start_date,
+                date__lte=end_date
+            ).aggregate(
+                total_spent=Sum('spent'),
+                total_revenue=Sum('revenue'),
+                total_impressions=Sum('impressions'),
+                total_clicks=Sum('clicks'),
+            )
+
+            spent = float(m_stats.get('total_spent') or 0)
+            revenue = float(m_stats.get('total_revenue') or 0)
+            impressions = int(m_stats.get('total_impressions') or 0)
+            clicks = int(m_stats.get('total_clicks') or 0)
+
+            # Calculate ROI per marketplace
+            roi = ((revenue - spent) / spent * 100) if spent > 0 else 0
+
+            by_marketplace[str(marketplace)] = {
+                'total_spent': round(spent, 2),
+                'total_revenue': round(revenue, 2),
+                'roi': round(roi, 2),
+                'total_impressions': impressions,
+                'total_clicks': clicks,
+                'ctr': round((clicks / impressions * 100) if impressions > 0 else 0, 2),
+                'campaigns_count': campaigns.filter(marketplace=marketplace).count(),
+            }
+
+        return by_marketplace
+
+    def _aggregate_by_status(
+            self,
+            start_date: datetime,
+            end_date: datetime
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Aggregate statistics grouped by campaign status
+
+        Args:
+            start_date: Start date for aggregation
+            end_date: End date for aggregation
+
+        Returns:
+            Dict with status as key and stats as value
+        """
+        by_status = {}
+
+        # Iterate through all possible statuses
+        for status_choice in CampaignStatus.choices:
+            status_value = status_choice[0]  # Integer value (1, 2, 3, etc.)
+            status_label = status_choice[1]  # Display name ("Active", "Paused", etc.)
+
+            # Get campaigns with this status
+            campaigns_with_status = Campaign.objects.filter(
+                user=self.user,
+                status=status_value
+            )
+
+            # Get statistics for campaigns with this status
+            s_stats = CampaignStatistic.objects.filter(
+                campaign__user=self.user,
+                campaign__status=status_value,
+                date__gte=start_date,
+                date__lte=end_date
+            ).aggregate(
+                total_spent=Sum('spent'),
+                total_revenue=Sum('revenue'),
+                total_impressions=Sum('impressions'),
+                total_clicks=Sum('clicks'),
+            )
+
+            spent = float(s_stats.get('total_spent') or 0)
+            revenue = float(s_stats.get('total_revenue') or 0)
+            impressions = int(s_stats.get('total_impressions') or 0)
+            clicks = int(s_stats.get('total_clicks') or 0)
+
+            # Calculate ROI per status
+            roi = ((revenue - spent) / spent * 100) if spent > 0 else 0
+
+            # Use string representation of status for JSON key
+            status_key = str(status_label).lower()
+
+            by_status[status_key] = {
+                'total_spent': round(spent, 2),
+                'total_revenue': round(revenue, 2),
+                'roi': round(roi, 2),
+                'total_impressions': impressions,
+                'total_clicks': clicks,
+                'ctr': round((clicks / impressions * 100) if impressions > 0 else 0, 2),
+                'campaigns_count': campaigns_with_status.count(),
+            }
+
+        return by_status
+
+    def get_campaign_statistics(
+            self,
+            campaign_id: int,
+            start_date: Optional[datetime] = None,
+            end_date: Optional[datetime] = None
+    ) -> Dict[str, Any]:
+        """
+        Get detailed statistics for a specific campaign
+
+        Args:
+            campaign_id: ID of the campaign
+            start_date: Start date for stats
+            end_date: End date for stats
+
+        Returns:
+            Dict with campaign statistics
+        """
+        if not start_date:
+            start_date = timezone.now() - timedelta(days=7)
+        if not end_date:
+            end_date = timezone.now()
+
         try:
             campaign = Campaign.objects.get(id=campaign_id, user=self.user)
         except Campaign.DoesNotExist:
-            return None
-        
-        return {
-            'campaign_id': campaign.id,
-            'name': campaign.name,
-            'metrics': {
-                'impressions': campaign.impressions,
-                'clicks': campaign.clicks,
-                'conversions': campaign.conversions,
-                'ctr': round(campaign.ctr, 2),
-                'conversion_rate': round(campaign.conversion_rate, 2),
-            },
-            'financial': {
-                'budget': float(campaign.budget or 0),
-                'spent': float(campaign.spent),
-                'revenue': float(campaign.revenue),
-                'roi': round(campaign.roi, 2),
-            }
-        }
-    
-    def get_dashboard_stats(self):
-        """
-        Get statistics for dashboard
-        """
-        # Last 30 days
-        thirty_days_ago = timezone.now() - timedelta(days=30)
-        
-        campaigns = Campaign.objects.filter(
-            user=self.user,
-            created_at__gte=thirty_days_ago
-        )
-        
-        # Current period stats
-        current_stats = campaigns.aggregate(
-            total_revenue=Sum('revenue'),
+            logger.warning(f"Campaign {campaign_id} not found for user {self.user.id}")
+            return {}
+
+        stats = CampaignStatistic.objects.filter(
+            campaign=campaign,
+            date__gte=start_date,
+            date__lte=end_date
+        ).aggregate(
             total_spent=Sum('spent'),
-            total_campaigns=Count('id'),
-        )
-        
-        # Previous period for comparison
-        sixty_days_ago = timezone.now() - timedelta(days=60)
-        previous_campaigns = Campaign.objects.filter(
-            user=self.user,
-            created_at__gte=sixty_days_ago,
-            created_at__lt=thirty_days_ago
-        )
-        
-        previous_stats = previous_campaigns.aggregate(
             total_revenue=Sum('revenue'),
-            total_spent=Sum('spent'),
-        )
-        
-        # Calculate growth
-        def calculate_growth(current, previous):
-            if previous and previous > 0:
-                return ((current - previous) / previous) * 100
-            return 0
-        
-        current_revenue = float(current_stats['total_revenue'] or 0)
-        previous_revenue = float(previous_stats['total_revenue'] or 0)
-        current_spent = float(current_stats['total_spent'] or 0)
-        previous_spent = float(previous_stats['total_spent'] or 0)
-        
-        return {
-            'current_period': {
-                'revenue': current_revenue,
-                'spent': current_spent,
-                'campaigns': current_stats['total_campaigns'],
-            },
-            'growth': {
-                'revenue': round(calculate_growth(current_revenue, previous_revenue), 2),
-                'spent': round(calculate_growth(current_spent, previous_spent), 2),
-            },
-            'period_days': 30,
-        }
-    
-    def get_campaign_detailed_stats(self, campaign_id, start_date=None, end_date=None):
-        """
-        Get comprehensive statistics for a campaign
-        """
-        try:
-            campaign = Campaign.objects.get(id=campaign_id, user=self.user)
-        except Campaign.DoesNotExist:
-            return None
-        
-        # Filter daily statistics
-        daily_stats = CampaignStatistic.objects.filter(campaign=campaign)
-        
-        if start_date:
-            daily_stats = daily_stats.filter(date__gte=start_date)
-        if end_date:
-            daily_stats = daily_stats.filter(date__lte=end_date)
-        
-        daily_stats = daily_stats.order_by('date')
-        
-        # Calculate total metrics
-        total_metrics = daily_stats.aggregate(
             total_impressions=Sum('impressions'),
             total_clicks=Sum('clicks'),
-            total_conversions=Sum('conversions'),
-            total_spent=Sum('spent'),
-            total_revenue=Sum('revenue'),
-            avg_ctr=Avg('ctr'),
-            avg_roi=Avg('roi'),
+            avg_cpm=Avg('cpm'),
+            avg_cpc=Avg('cpc'),
         )
-        
-        # Get top products for this campaign
-        top_products = self.get_campaign_top_products(campaign_id, limit=5)
-        
-        # Prepare chart data
-        chart_data = []
-        for stat in daily_stats:
-            chart_data.append({
-                'date': stat.date,
-                'impressions': stat.impressions,
-                'clicks': stat.clicks,
-                'conversions': stat.conversions,
-                'spent': stat.spent,
-                'revenue': stat.revenue,
-                'ctr': stat.ctr,
-                'roi': stat.roi,
-            })
-        
+
+        spent = float(stats.get('total_spent') or 0)
+        revenue = float(stats.get('total_revenue') or 0)
+        impressions = int(stats.get('total_impressions') or 0)
+        clicks = int(stats.get('total_clicks') or 0)
+
         return {
-            'campaign_info': {
+            'campaign': {
                 'id': campaign.id,
                 'name': campaign.name,
                 'marketplace': campaign.marketplace,
                 'status': campaign.status,
             },
-            'total_metrics': {
-                'impressions': total_metrics['total_impressions'] or 0,
-                'clicks': total_metrics['total_clicks'] or 0,
-                'conversions': total_metrics['total_conversions'] or 0,
-                'spent': float(total_metrics['total_spent'] or 0),
-                'revenue': float(total_metrics['total_revenue'] or 0),
-                'avg_ctr': float(total_metrics['avg_ctr'] or 0),
-                'avg_roi': float(total_metrics['avg_roi'] or 0),
+            'stats': {
+                'total_spent': round(spent, 2),
+                'total_revenue': round(revenue, 2),
+                'roi': round(((revenue - spent) / spent * 100) if spent > 0 else 0, 2),
+                'total_impressions': impressions,
+                'total_clicks': clicks,
+                'ctr': round((clicks / impressions * 100) if impressions > 0 else 0, 2),
+                'avg_cpm': round(float(stats.get('avg_cpm') or 0), 2),
+                'avg_cpc': round(float(stats.get('avg_cpc') or 0), 2),
             },
-            'daily_stats': daily_stats,
-            'top_products': top_products or [],
-            'chart_data': chart_data,
+            'period': {
+                'start_date': start_date.isoformat(),
+                'end_date': end_date.isoformat(),
+            }
         }
-    
-    def get_campaign_chart_data(self, campaign_id, start_date=None, end_date=None):
+
+    def get_product_statistics(
+            self,
+            product_id: Optional[int] = None,
+            start_date: Optional[datetime] = None,
+            end_date: Optional[datetime] = None
+    ) -> List[Dict[str, Any]]:
         """
-        Get time series data for campaign charts
+        Get product-level statistics
+
+        Args:
+            product_id: Optional specific product ID
+            start_date: Start date
+            end_date: End date
+
+        Returns:
+            List of product statistics
         """
-        try:
-            campaign = Campaign.objects.get(id=campaign_id, user=self.user)
-        except Campaign.DoesNotExist:
-            return None
-        
-        # Filter daily statistics
-        daily_stats = CampaignStatistic.objects.filter(campaign=campaign)
-        
-        if start_date:
-            daily_stats = daily_stats.filter(date__gte=start_date)
-        if end_date:
-            daily_stats = daily_stats.filter(date__lte=end_date)
-        
-        daily_stats = daily_stats.order_by('date')
-        
-        chart_data = []
-        for stat in daily_stats:
-            chart_data.append({
-                'date': stat.date,
-                'impressions': stat.impressions,
-                'clicks': stat.clicks,
-                'conversions': stat.conversions,
-                'spent': stat.spent,
-                'revenue': stat.revenue,
-                'ctr': stat.ctr,
-                'roi': stat.roi,
-            })
-        
-        return chart_data
-    
-    def get_top_products(self, limit=10):
-        """
-        Get top performing products across all user's campaigns
-        """
-        campaign_ids = Campaign.objects.filter(user=self.user).values_list('id', flat=True)
-        
-        # Aggregate product statistics
-        products = ProductStatistic.objects.filter(
-            campaign_id__in=campaign_ids
-        ).values('product_id', 'product_name').annotate(
-            total_revenue=Sum('revenue'),
-            total_orders=Sum('orders'),
-            total_views=Sum('views'),
-            avg_conversion_rate=Avg('conversion_rate'),
-            avg_acos=Avg('acos'),
-        ).order_by('-total_revenue')[:limit]
-        
-        return list(products)
-    
-    def get_campaign_top_products(self, campaign_id, limit=10):
-        """
-        Get top performing products for a specific campaign
-        """
-        try:
-            campaign = Campaign.objects.get(id=campaign_id, user=self.user)
-        except Campaign.DoesNotExist:
-            return None
-        
-        # Aggregate product statistics for this campaign
-        products = ProductStatistic.objects.filter(
-            campaign=campaign
-        ).values('product_id', 'product_name').annotate(
-            total_revenue=Sum('revenue'),
-            total_orders=Sum('orders'),
-            total_views=Sum('views'),
-            avg_conversion_rate=Avg('conversion_rate'),
-            avg_acos=Avg('acos'),
-        ).order_by('-total_revenue')[:limit]
-        
-        return list(products)
-    
-    def aggregate_daily_user_stats(self, date=None):
-        """
-        Aggregate daily statistics for a user
-        Called by Celery task daily
-        """
-        if date is None:
-            date = timezone.now().date() - timedelta(days=1)  # Yesterday
-        
-        # Get all user's campaigns
-        campaigns = Campaign.objects.filter(user=self.user)
-        campaign_ids = list(campaigns.values_list('id', flat=True))
-        
-        # Aggregate daily statistics
-        daily_stats = CampaignStatistic.objects.filter(
-            campaign_id__in=campaign_ids,
-            date=date
-        ).aggregate(
-            total_impressions=Sum('impressions'),
-            total_clicks=Sum('clicks'),
+        if not start_date:
+            start_date = timezone.now() - timedelta(days=7)
+        if not end_date:
+            end_date = timezone.now()
+
+        queryset = ProductStatistic.objects.filter(
+            campaign__user=self.user,
+            date__gte=start_date,
+            date__lte=end_date
+        )
+
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+
+        # Group by product and aggregate
+        products = queryset.values('product_id', 'product_name').annotate(
             total_spent=Sum('spent'),
             total_revenue=Sum('revenue'),
-            total_conversions=Sum('conversions'),
-            avg_ctr=Avg('ctr'),
-            avg_roi=Avg('roi'),
-        )
-        
-        # Count active campaigns
-        active_campaigns = campaigns.filter(
-            status=Campaign.StatusChoices.ACTIVE
-        ).count()
-        
-        # Create or update DailyUserStatistic
-        daily_user_stat, created = DailyUserStatistic.objects.update_or_create(
+            total_impressions=Sum('impressions'),
+            total_clicks=Sum('clicks'),
+            total_orders=Sum('orders'),
+        ).order_by('-total_revenue')
+
+        result = []
+        for product in products:
+            spent = float(product.get('total_spent') or 0)
+            revenue = float(product.get('total_revenue') or 0)
+            impressions = int(product.get('total_impressions') or 0)
+            clicks = int(product.get('total_clicks') or 0)
+
+            result.append({
+                'product_id': product['product_id'],
+                'product_name': product['product_name'],
+                'total_spent': round(spent, 2),
+                'total_revenue': round(revenue, 2),
+                'roi': round(((revenue - spent) / spent * 100) if spent > 0 else 0, 2),
+                'total_impressions': impressions,
+                'total_clicks': clicks,
+                'total_orders': product.get('total_orders') or 0,
+                'ctr': round((clicks / impressions * 100) if impressions > 0 else 0, 2),
+            })
+
+        return result
+
+    def get_daily_user_statistics(
+            self,
+            start_date: Optional[datetime] = None,
+            end_date: Optional[datetime] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get daily aggregated user statistics
+
+        Args:
+            start_date: Start date
+            end_date: End date
+
+        Returns:
+            List of daily stats
+        """
+        if not start_date:
+            start_date = timezone.now() - timedelta(days=30)
+        if not end_date:
+            end_date = timezone.now()
+
+        daily_stats = DailyUserStatistic.objects.filter(
             user=self.user,
-            date=date,
-            defaults={
-                'total_impressions': daily_stats['total_impressions'] or 0,
-                'total_clicks': daily_stats['total_clicks'] or 0,
-                'total_spent': daily_stats['total_spent'] or Decimal('0.00'),
-                'total_revenue': daily_stats['total_revenue'] or Decimal('0.00'),
-                'total_conversions': daily_stats['total_conversions'] or 0,
-                'active_campaigns': active_campaigns,
-                'avg_ctr': daily_stats['avg_ctr'] or Decimal('0.00'),
-                'avg_roi': daily_stats['avg_roi'] or Decimal('0.00'),
-            }
-        )
-        
-        logger.info(
-            f"{'Created' if created else 'Updated'} daily user statistics for {self.user.email} on {date}"
-        )
-        
-        return daily_user_stat
+            date__gte=start_date,
+            date__lte=end_date
+        ).order_by('date')
+
+        result = []
+        for stat in daily_stats:
+            result.append({
+                'date': stat.date.isoformat(),
+                'total_spent': float(stat.total_spent or 0),
+                'total_revenue': float(stat.total_revenue or 0),
+                'total_impressions': stat.total_impressions or 0,
+                'total_clicks': stat.total_clicks or 0,
+                'total_orders': stat.total_orders or 0,
+                'active_campaigns': stat.active_campaigns or 0,
+            })
+
+        return result

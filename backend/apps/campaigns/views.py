@@ -88,7 +88,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
         Activate campaign
         """
         campaign = self.get_object()
-        campaign.status = Campaign.StatusChoices.ACTIVE
+        campaign.status = CampaignStatus.ACTIVE
         campaign.save()
         return Response(
             CampaignSerializer(campaign).data,
@@ -101,7 +101,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
         Pause campaign
         """
         campaign = self.get_object()
-        campaign.status = Campaign.StatusChoices.PAUSED
+        campaign.status = CampaignStatus.PAUSED
         campaign.save()
         return Response(
             CampaignSerializer(campaign).data,
@@ -114,7 +114,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
         Archive campaign
         """
         campaign = self.get_object()
-        campaign.status = Campaign.StatusChoices.ARCHIVED
+        campaign.status = CampaignStatus.ARCHIVED
         campaign.save()
         return Response(
             CampaignSerializer(campaign).data,

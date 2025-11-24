@@ -1,4 +1,4 @@
-import api from '@/lib/api'
+import { httpClient } from '@/lib/http'
 import { Campaign, CampaignCreate, CampaignUpdate } from '@/types/campaign'
 
 /**
@@ -27,7 +27,7 @@ class CampaignsService {
     search?: string
     ordering?: string
   }): Promise<Campaign[]> {
-    const response = await api.get<Campaign[] | { results: Campaign[] }>('/campaigns/', { params })
+    const response = await httpClient.get<Campaign[] | { results: Campaign[] }>('/campaigns/', { params })
     
     // Handle both paginated and non-paginated responses
     if (Array.isArray(response.data)) {
@@ -42,7 +42,7 @@ class CampaignsService {
    * Response: Campaign object
    */
   async getById(id: number): Promise<Campaign> {
-    const response = await api.get<Campaign>(`/campaigns/${id}/`)
+    const response = await httpClient.get<Campaign>(`/campaigns/${id}/`)
     return response.data
   }
 
@@ -53,7 +53,7 @@ class CampaignsService {
    * Response: Campaign object
    */
   async create(data: CampaignCreate): Promise<Campaign> {
-    const response = await api.post<Campaign>('/campaigns/', data)
+    const response = await httpClient.post<Campaign>('/campaigns/', data)
     return response.data
   }
 
@@ -64,7 +64,7 @@ class CampaignsService {
    * Response: Campaign object
    */
   async update(id: number, data: CampaignUpdate): Promise<Campaign> {
-    const response = await api.put<Campaign>(`/campaigns/${id}/`, data)
+    const response = await httpClient.put<Campaign>(`/campaigns/${id}/`, data)
     return response.data
   }
 
@@ -75,7 +75,7 @@ class CampaignsService {
    * Response: Campaign object
    */
   async partialUpdate(id: number, data: Partial<CampaignUpdate>): Promise<Campaign> {
-    const response = await api.patch<Campaign>(`/campaigns/${id}/`, data)
+    const response = await httpClient.patch<Campaign>(`/campaigns/${id}/`, data)
     return response.data
   }
 
@@ -85,7 +85,7 @@ class CampaignsService {
    * Response: 204 No Content
    */
   async delete(id: number): Promise<void> {
-    await api.delete(`/campaigns/${id}/`)
+    await httpClient.delete(`/campaigns/${id}/`)
   }
 
   /**
@@ -97,7 +97,7 @@ class CampaignsService {
     start_date?: string
     end_date?: string
   }): Promise<any> {
-    const response = await api.get(`/campaigns/${id}/statistics/`, { params })
+    const response = await httpClient.get(`/campaigns/${id}/statistics/`, { params })
     return response.data
   }
 
@@ -105,11 +105,11 @@ class CampaignsService {
    * Bulk operations (if implemented in backend)
    */
   async bulkDelete(ids: number[]): Promise<void> {
-    await api.post('/campaigns/bulk_delete/', { ids })
+    await httpClient.post('/campaigns/bulk_delete/', { ids })
   }
 
   async bulkUpdate(ids: number[], data: Partial<CampaignUpdate>): Promise<void> {
-    await api.post('/campaigns/bulk_update/', { ids, data })
+    await httpClient.post('/campaigns/bulk_update/', { ids, data })
   }
 }
 

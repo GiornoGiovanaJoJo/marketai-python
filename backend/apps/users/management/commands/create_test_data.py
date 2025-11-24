@@ -33,7 +33,7 @@ class Command(BaseCommand):
         
         # Create test campaigns
         marketplaces = [choice[0] for choice in Campaign.MarketplaceChoices.choices]
-        statuses = [choice[0] for choice in Campaign.StatusChoices.choices]
+        statuses = [choice[0] for choice in CampaignStatus.choices]
         
         for user in users:
             for i in range(5):
