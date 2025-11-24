@@ -2,11 +2,18 @@
 
 🚀 **MarketAI** - Платформа для управления рекламными кампаниями на маркетплейсах
 
+[![Django](https://img.shields.io/badge/Django-5.1.10-green.svg)](https://www.djangoproject.com/)
+[![React](https://img.shields.io/badge/React-18.3-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue.svg)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-brightgreen.svg)](https://www.docker.com/)
+
 ## 📊 Статус проекта
 
-🔸 **Backend:** 100% готов  
-🔶 **Frontend:** 95% готов (миграция завершена!)  
+🔸 **Backend:** 100% готов ✅  
+🔶 **Frontend:** 98% готов (добавлена документация по SidebarContext, useSidebar hook)  
 ✅ **Готов к тестированию через Docker**
+
+**Последнее обновление:** 24 ноября 2025
 
 ---
 
@@ -57,7 +64,7 @@ cd marketai-python
 ```
 
 | Команда | Описание |
-|---------|-----------|
+|---------|----------|
 | `start` | Запустить все сервисы |
 | `stop` | Остановить все сервисы |
 | `restart` | Перезапустить все |
@@ -92,17 +99,17 @@ cd marketai-python
 
 ### Backend
 - **Python:** 3.12+
-- **Django:** 5.1
+- **Django:** 5.1.10+ (с патчами безопасности CVE-2025-48432, CVE-2025-64459)
 - **Django REST Framework:** 3.14
 - **PostgreSQL:** 16
 - **Redis:** 7
 - **Celery:** 5.3
-- **JWT Authentication:** djangorestframework-simplejwt
+- **JWT Authentication:** djangorestframework-simplejwt 5.3.1
 - **API Docs:** drf-spectacular (Swagger/ReDoc)
 - **DuckDB:** 1.1.3 - аналитика
 
 ### Frontend (полная миграция завершена ✅)
-- **React:** 18.2
+- **React:** 18.3
 - **TypeScript:** 5.2
 - **Vite:** 5.0
 - **Tailwind CSS:** 3.3
@@ -128,29 +135,36 @@ cd marketai-python
 - [x] API документация (Swagger/ReDoc)
 - [x] Тесты (pytest)
 
-### Frontend - 95% 🔶 (миграция завершена!)
+### Frontend - 98% 🔶
 - [x] React + TypeScript + Vite
 - [x] Tailwind CSS + Radix UI
 - [x] React Router (26 маршрутов)
 - [x] **Все 26 страниц перенесено** ✅
 - [x] **60+ компонентов перенесено** ✅
 - [x] **Redux Toolkit + React Redux** ✅
-- [x] **Contexts (Auth, Theme)** ✅
+- [x] **Contexts (Auth, Theme, Sidebar)** ✅
+- [x] **Hooks (useSidebar)** ✅
 - [x] API сервисы (auth, campaigns, statistics)
 - [x] TypeScript типы
 - [x] Custom hooks
 - [x] Dockerfile + nginx.conf
-- [ ] Обновление API эндпоинтов под Django (15%)
-- [ ] Тестирование всех страниц (0%)
+- [x] Полная документация (SidebarContext, useSidebar, API endpoints)
+- [ ] Обновление API эндпоинтов под Django (10%)
+- [ ] E2E тестирование всех страниц (0%)
 
 **Перенесено из [marketai-front](https://github.com/GiornoGiovanaJoJo/marketai-front):**
 - 📊 **~150 файлов** (~500 KB кода)
 - 📄 **26 полных страниц** с бизнес-логикой
 - 🧩 **60+ компонентов** (UI + бизнес)
 - 🏪 **Redux Toolkit store** + slices
-- 🔐 **AuthContext** + ThemeContext
+- 🔐 **Contexts:** AuthContext, ThemeContext, SidebarContext
+- 🎣 **Hooks:** useSidebar, useAuth, useTheme
 
-📖 **План миграции:** [FRONTEND_MIGRATION_PLAN.md](./FRONTEND_MIGRATION_PLAN.md)
+📖 **Документация:**
+- [FRONTEND_MIGRATION_PLAN.md](./FRONTEND_MIGRATION_PLAN.md) - План миграции
+- [frontend/MIGRATION_STATUS.md](./frontend/MIGRATION_STATUS.md) - Текущий статус
+- [frontend/docs/contexts/SidebarContext.md](./frontend/docs/contexts/SidebarContext.md) - SidebarContext API
+- [frontend/docs/hooks/useSidebar.md](./frontend/docs/hooks/useSidebar.md) - useSidebar hook
 
 ---
 
@@ -222,6 +236,28 @@ cd marketai-python
 - ✅ **Redux Toolkit** для управления состоянием
 - ✅ **Tailwind CSS + Radix UI** для современного UI
 - ✅ **DuckDB** для аналитики
+- ✅ **Полная документация** компонентов и hooks
+
+---
+
+## 🔐 Безопасность
+
+### Актуальные обновления безопасности Django 5.1.10+
+
+**Критические уязвимости исправлены:**
+- ✅ **CVE-2025-48432** - Log injection через неэкранированный request.path
+- ✅ **CVE-2025-64459** - SQL injection при передаче request.GET.dict() в QuerySet
+
+**Рекомендации для production:**
+
+1. **Всегда используйте Django 5.1.10+**
+2. **Никогда не передавайте** `request.GET.dict()` или `request.POST.dict()` напрямую в QuerySet методы
+3. **Используйте Docker secrets** для паролей БД вместо переменных окружения
+4. **Настройте PostgreSQL healthcheck** и persistent volumes
+5. **Включите SSL/TLS** для production
+6. **Регулярно обновляйте зависимости**
+
+Подробнее: [DOCKER_GUIDE.md - Безопасность](./DOCKER_GUIDE.md#🔐-безопасность-для-production)
 
 ---
 
@@ -292,4 +328,6 @@ MIT License
 
 ---
 
-**Статус:** 🔸 Backend 100% | 🔶 Frontend 95% | ✅ Готов к тестированию!
+**Статус:** 🔸 Backend 100% | 🔶 Frontend 98% | ✅ Готов к тестированию!
+
+**Обновлено:** 24 ноября 2025, 04:08 MSK
