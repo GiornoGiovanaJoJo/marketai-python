@@ -6,6 +6,8 @@
 [![React](https://img.shields.io/badge/React-18.3-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue.svg)](https://www.typescriptlang.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-brightgreen.svg)](https://www.docker.com/)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue.svg)](https://github.com/features/actions)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## 📊 Статус проекта
 
@@ -14,6 +16,36 @@
 ✅ **Готов к тестированию через Docker**
 
 **Последнее обновление:** 24 ноября 2025
+
+---
+
+## 🎉 Новые возможности (v2.0)
+
+### ✨ Критические обновления безопасности
+- ✅ **Django 5.1.10** с патчами CVE-2025-48432, CVE-2025-64459
+- ✅ **Обновленные зависимости** (cryptography 43.0.3, pillow 11.0.0)
+- ✅ **Bandit** security scanner
+
+### 🔧 CI/CD Pipeline
+- ✅ **GitHub Actions** автоматическое тестирование
+- ✅ **Multi-Python/Node** поддержка (Python 3.12-3.13, Node 18-22)
+- ✅ **Docker build tests**
+- ✅ **Security scanning** (Trivy, Safety, npm audit)
+- ✅ **Code coverage** reporting
+
+### 🛡️ Pre-commit Hooks
+- ✅ **Python:** black, isort, flake8, mypy, pylint, bandit
+- ✅ **TypeScript:** prettier, eslint
+- ✅ **Security:** detect-secrets
+- ✅ **Quality:** YAML lint, markdown link check
+
+### 🚀 Production-Ready
+- ✅ **docker-compose.prod.yml** с Nginx
+- ✅ **Healthchecks** для всех сервисов
+- ✅ **Resource limits** (CPU, memory)
+- ✅ **Horizontal scaling** (replicas)
+- ✅ **Structured logging**
+- ✅ **Monitoring** (Sentry SDK)
 
 ---
 
@@ -43,11 +75,77 @@ cd marketai-python
 
 ---
 
-## 📝 О проекте
+## 👨‍💻 Разработчикам
 
-Полнофункциональное веб-приложение для аналитики и управления рекламой на Wildberries и других маркетплейсах.
+### Установка pre-commit hooks
 
-**Миграция с PHP Laravel на Python Django 5.1** ✅
+```bash
+# Установите pre-commit
+pip install pre-commit
+
+# Установите hooks
+pre-commit install
+
+# Запустите на всех файлах
+pre-commit run --all-files
+```
+
+### Запуск CI/CD локально
+
+```bash
+# Backend tests
+cd backend
+pytest --cov=. --cov-report=html
+
+# Frontend tests
+cd frontend
+npm run lint
+npm run type-check
+npm run build
+
+# Security scan
+safety check --file backend/requirements.txt
+npm audit
+```
+
+---
+
+## 🚀 Production Deployment
+
+### 1. Подготовка
+
+```bash
+# Создайте .env.production
+cp .env.example .env.production
+
+# Установите пароли
+DB_PASSWORD=your_secure_db_password
+REDIS_PASSWORD=your_secure_redis_password
+SECRET_KEY=$(python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+```
+
+### 2. Запуск
+
+```bash
+# С Nginx reverse proxy
+docker-compose -f docker-compose.prod.yml up -d
+
+# Проверьте статус
+docker-compose -f docker-compose.prod.yml ps
+
+# Логи
+docker-compose -f docker-compose.prod.yml logs -f
+```
+
+### 3. SSL/TLS (опционально)
+
+```bash
+# Let's Encrypt с certbot
+docker run -it --rm \
+  -v ./nginx/ssl:/etc/letsencrypt \
+  certbot/certbot certonly --standalone \
+  -d your-domain.com
+```
 
 ---
 
@@ -64,7 +162,7 @@ cd marketai-python
 ```
 
 | Команда | Описание |
-|---------|----------|
+|---------|-----------|
 | `start` | Запустить все сервисы |
 | `stop` | Остановить все сервисы |
 | `restart` | Перезапустить все |
@@ -77,36 +175,21 @@ cd marketai-python
 | `clean` | Полная очистка |
 | `help` | Показать справку |
 
-### Примеры:
-
-```bash
-# Посмотреть логи
-./docker-local.sh logs
-
-# Перезапустить backend
-./docker-local.sh restart-one backend
-
-# Django shell
-./docker-local.sh shell
-
-# Запустить тесты
-./docker-local.sh test
-```
-
 ---
 
 ## 🛠️ Технологический стек
 
 ### Backend
 - **Python:** 3.12+
-- **Django:** 5.1.10+ (с патчами безопасности CVE-2025-48432, CVE-2025-64459)
-- **Django REST Framework:** 3.14
+- **Django:** 5.1.10+ (🔒 патчи безопасности CVE-2025-48432, CVE-2025-64459)
+- **Django REST Framework:** 3.15.2
 - **PostgreSQL:** 16
 - **Redis:** 7
-- **Celery:** 5.3
+- **Celery:** 5.4
 - **JWT Authentication:** djangorestframework-simplejwt 5.3.1
 - **API Docs:** drf-spectacular (Swagger/ReDoc)
 - **DuckDB:** 1.1.3 - аналитика
+- **Monitoring:** Sentry SDK 2.18.0
 
 ### Frontend (полная миграция завершена ✅)
 - **React:** 18.3
@@ -134,6 +217,8 @@ cd marketai-python
 - [x] Celery задачи
 - [x] API документация (Swagger/ReDoc)
 - [x] Тесты (pytest)
+- [x] CI/CD pipeline
+- [x] Pre-commit hooks
 
 ### Frontend - 98% 🔶
 - [x] React + TypeScript + Vite
@@ -149,22 +234,9 @@ cd marketai-python
 - [x] Custom hooks
 - [x] Dockerfile + nginx.conf
 - [x] Полная документация (SidebarContext, useSidebar, API endpoints)
+- [x] Pre-commit hooks (prettier, eslint)
 - [ ] Обновление API эндпоинтов под Django (10%)
 - [ ] E2E тестирование всех страниц (0%)
-
-**Перенесено из [marketai-front](https://github.com/GiornoGiovanaJoJo/marketai-front):**
-- 📊 **~150 файлов** (~500 KB кода)
-- 📄 **26 полных страниц** с бизнес-логикой
-- 🧩 **60+ компонентов** (UI + бизнес)
-- 🏪 **Redux Toolkit store** + slices
-- 🔐 **Contexts:** AuthContext, ThemeContext, SidebarContext
-- 🎣 **Hooks:** useSidebar, useAuth, useTheme
-
-📖 **Документация:**
-- [FRONTEND_MIGRATION_PLAN.md](./FRONTEND_MIGRATION_PLAN.md) - План миграции
-- [frontend/MIGRATION_STATUS.md](./frontend/MIGRATION_STATUS.md) - Текущий статус
-- [frontend/docs/contexts/SidebarContext.md](./frontend/docs/contexts/SidebarContext.md) - SidebarContext API
-- [frontend/docs/hooks/useSidebar.md](./frontend/docs/hooks/useSidebar.md) - useSidebar hook
 
 ---
 
@@ -179,68 +251,7 @@ cd marketai-python
 
 ---
 
-## 📋 Страницы приложения (26 страниц ✅)
-
-### 🔐 Аутентификация
-- Вход (`/login`)
-- Регистрация (`/register`)
-
-### 🏠 Главные
-- Главная (`/`)
-- Dashboard (`/dashboard`)
-- Кампании (`/campaigns`)
-
-### 📊 Реклама
-- РНП (`/advertising/rnp`)
-- ДДС (`/advertising/dds`)
-
-### 📈 Отчёты
-- Финансовый отчёт (`/reports/financial`)
-- План-факт (`/reports/plan-fact`)
-- Юнит-экономика (`/reports/unit-economics`)
-- Метрики (`/reports/metrics`)
-- Heatmap (`/reports/heatmap`)
-
-### 🏢 Организация
-- Организация (`/organization`)
-- Сотрудники (`/organization/employees`)
-- Партнёры (`/organization/partners`)
-- Доступ (`/organization/access`)
-
-### ⚙️ Автоматизация
-- Автоматизация (`/automation`)
-- Предпоставка (`/automation/pre-delivery`)
-
-### 📆 OPI
-- OPI Dashboard (`/opi`)
-
-### 👥 Реферальная программа
-- Обзор (`/referral`)
-- Сеть (`/referral/network`)
-- Доход (`/referral/income`)
-- О программе (`/referral/about`)
-- Выплаты (`/referral/payments`)
-- Настройки (`/referral/settings`)
-
----
-
-## 🌟 Особенности
-
-- ✅ **Полная миграция frontend** из Laravel/Vue на Django/React
-- ✅ **Docker Compose** для лёгкого запуска полного стека
-- ✅ **Автоматические скрипты** для запуска (Linux/macOS/Windows)
-- ✅ **JWT аутентификация** с refresh tokens
-- ✅ **Swagger/ReDoc** интерактивная API документация
-- ✅ **Celery** для фоновых задач и планировщика
-- ✅ **TypeScript** для типобезопасности frontend
-- ✅ **Redux Toolkit** для управления состоянием
-- ✅ **Tailwind CSS + Radix UI** для современного UI
-- ✅ **DuckDB** для аналитики
-- ✅ **Полная документация** компонентов и hooks
-
----
-
-## 🔐 Безопасность
+## 🔒 Безопасность
 
 ### Актуальные обновления безопасности Django 5.1.10+
 
@@ -257,31 +268,7 @@ cd marketai-python
 5. **Включите SSL/TLS** для production
 6. **Регулярно обновляйте зависимости**
 
-Подробнее: [DOCKER_GUIDE.md - Безопасность](./DOCKER_GUIDE.md#🔐-безопасность-для-production)
-
----
-
-## 🐛 Решение проблем
-
-### Порты заняты?
-```bash
-# Освободите порты 3000, 8000, 5432, 6379
-./docker-local.sh stop
-```
-
-### Что-то не работает?
-```bash
-# Полная перезагрузка
-./docker-local.sh clean
-./docker-local.sh start
-```
-
-### Проверьте логи:
-```bash
-./docker-local.sh logs
-```
-
-👉 **Подробное решение проблем:** [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)
+Подробнее: [DOCKER_GUIDE.md - Безопасность](./DOCKER_GUIDE.md#🔒-безопасность-для-production)
 
 ---
 
@@ -296,6 +283,11 @@ docker-compose exec backend pytest -v
 
 # С coverage
 docker-compose exec backend pytest --cov=. --cov-report=html
+
+# Проверка безопасности
+cd backend
+safety check --file requirements.txt
+bandit -r .
 ```
 
 📖 **Подробное руководство:** [TESTING.md](./TESTING.md)
@@ -306,9 +298,10 @@ docker-compose exec backend pytest --cov=. --cov-report=html
 
 1. Fork репозиторий
 2. Создайте feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit изменения (`git commit -m 'feat: Add amazing feature'`)
-4. Push в branch (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
+3. Установите pre-commit hooks (`pre-commit install`)
+4. Commit изменения (`git commit -m 'feat: Add amazing feature'`)
+5. Push в branch (`git push origin feature/amazing-feature`)
+6. Откройте Pull Request
 
 📖 **Подробнее:** [CONTRIBUTING.md](./CONTRIBUTING.md)
 
@@ -330,4 +323,4 @@ MIT License
 
 **Статус:** 🔸 Backend 100% | 🔶 Frontend 98% | ✅ Готов к тестированию!
 
-**Обновлено:** 24 ноября 2025, 04:08 MSK
+**Обновлено:** 24 ноября 2025, 23:50 MSK

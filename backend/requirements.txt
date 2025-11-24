@@ -1,65 +1,72 @@
 # Django Core
-Django==5.1
+Django==5.1.10  # КРИТИЧНО: обновлено с патчами CVE-2025-48432, CVE-2025-64459
 django-environ==0.11.2
 
 # Django REST Framework
-djangorestframework==3.14.0
+djangorestframework==3.15.2  # обновлено с 3.14.0
 djangorestframework-simplejwt==5.3.1
-drf-spectacular==0.27.0
-django-filter==23.5
+drf-spectacular==0.27.2  # обновлено с 0.27.0
+django-filter==24.3  # обновлено с 23.5
 
 # Database
-psycopg2-binary==2.9.9
-dj-database-url==2.1.0
+psycopg2-binary==2.9.10  # обновлено с 2.9.9
+dj-database-url==2.2.0  # обновлено с 2.1.0
 
 # Caching & Message Queue
-redis==5.0.1
+redis==5.0.9  # обновлено с 5.0.1
 django-redis==5.4.0
-celery==5.3.6
+celery==5.4.0  # обновлено с 5.3.6
 django-celery-beat==2.7.0
 django-celery-results==2.5.1
 pika==1.3.2
 
 # CORS
-django-cors-headers==4.3.1
+django-cors-headers==4.5.0  # обновлено с 4.3.1
 
 # Auth & Security
-PyJWT==2.8.0
-cryptography==42.0.0
+PyJWT==2.9.0  # обновлено с 2.8.0
+cryptography==43.0.3  # КРИТИЧНО: обновлено с 42.0.0
 django-encrypted-model-fields==0.6.5
 
 # Analytics
-duckdb==1.1.3  # ← ОБНОВЛЕНО (совместимо с Python 3.12 + Windows)
-pandas==2.1.4
-numpy==1.26.3
+duckdb==1.1.3  # совместимо с Python 3.12 + Windows
+pandas==2.2.3  # обновлено с 2.1.4
+numpy==1.26.4  # обновлено с 1.26.3
 
 # HTTP Client
-requests==2.31.0
-httpx==0.26.0
+requests==2.32.3  # обновлено с 2.31.0
+httpx==0.27.2  # обновлено с 0.26.0
 
 # Utilities
-python-dateutil==2.8.2
-pytz==2024.1
-pillow==10.2.0
+python-dateutil==2.9.0  # обновлено с 2.8.2
+pytz==2024.2  # обновлено с 2024.1
+pillow==11.0.0  # КРИТИЧНО: обновлено с 10.2.0
 
 # Production Server
-gunicorn==21.2.0
-whitenoise==6.6.0
+gunicorn==23.0.0  # обновлено с 21.2.0
+whitenoise==6.8.2  # обновлено с 6.6.0
 
 # Development
-ipython==8.20.0
+ipython==8.29.0  # обновлено с 8.20.0
 ipdb==0.13.13
 
 # Testing
-pytest==7.4.4
-pytest-django==4.7.0
-pytest-cov==4.1.0
-factory-boy==3.3.0
-faker==22.0.0
+pytest==8.3.4  # обновлено с 7.4.4
+pytest-django==4.9.0  # обновлено с 4.7.0
+pytest-cov==6.0.0  # обновлено с 4.1.0
+factory-boy==3.3.1  # обновлено с 3.3.0
+faker==30.8.2  # обновлено с 22.0.0
 
 # Code Quality
-black==24.1.1
-flake8==7.0.0
+black==24.10.0  # обновлено с 24.1.1
+flake8==7.1.1  # обновлено с 7.0.0
 isort==5.13.2
-mypy==1.8.0
-pylint==3.0.3
+mypy==1.13.0  # обновлено с 1.8.0
+pylint==3.3.1  # обновлено с 3.0.3
+
+# ASGI Server (опционально для production)
+uvicorn[standard]==0.32.1  # добавлено для async support
+
+# Monitoring & Logging (опционально)
+sentry-sdk==2.18.0  # добавлено для error tracking
+python-json-logger==3.2.1  # добавлено для structured logging

@@ -1,0 +1,25 @@
+[bandit]
+# Bandit конфигурация для MarketAI Backend
+
+# Исключения
+exclude_dirs = [
+    '/tests',
+    '/migrations',
+    '/.venv',
+    '/venv',
+    '/__pycache__',
+    '/.pytest_cache',
+    '/.mypy_cache'
+]
+
+# Тесты для пропуска
+skips = [
+    'B101',  # assert_used - используется в тестах
+    'B601',  # paramiko_calls - если используется
+]
+
+# Уровень уведомлений
+level = 'MEDIUM'
+
+# Уровень доверия
+confidence = 'MEDIUM'
