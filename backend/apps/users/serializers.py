@@ -9,6 +9,8 @@ class UserSerializer(serializers.ModelSerializer):
     Serializer for User model
     """
     full_name = serializers.SerializerMethodField()
+    is_email_verified = serializers.ReadOnlyField()
+    is_phone_verified = serializers.ReadOnlyField()
     
     class Meta:
         model = User
@@ -20,9 +22,11 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'full_name',
             'phone',
-
+            'is_email_verified',
+            'is_phone_verified',
+            'date_joined',
         )
-        read_only_fields = ('id', 'is_email_verified', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'is_email_verified', 'is_phone_verified', 'date_joined')
     
     def get_full_name(self, obj):
         return obj.get_full_name()
@@ -39,14 +43,17 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'email',
-            'username',
+            'phone',
             'first_name',
             'last_name',
-            'phone',
-            'company',
             'password',
             'password_confirm',
         )
+        extra_kwargs = {
+            'first_name': {'required': False, 'allow_blank': True},
+            'last_name': {'required': False, 'allow_blank': True},
+            'email': {'required': False, 'allow_null': True},
+        }
     
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -56,9 +63,15 @@ class UserCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
+        phone = validated_data.get('phone')
+        first_name = validated_data.get('first_name', '')
+        
+        user = User.objects.create_user(
+            phone=phone,
+            password=password,
+            first_name=first_name,
+            **{k: v for k, v in validated_data.items() if k not in ['phone', 'first_name']}
+        )
         return user
 
 
@@ -71,10 +84,13 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         fields = (
             'first_name',
             'last_name',
-            'phone',
-            'company',
-            'avatar',
+            'email',
         )
+        extra_kwargs = {
+            'first_name': {'required': False, 'allow_blank': True},
+            'last_name': {'required': False, 'allow_blank': True},
+            'email': {'required': False, 'allow_null': True},
+        }
 
 
 class PasswordChangeSerializer(serializers.Serializer):
