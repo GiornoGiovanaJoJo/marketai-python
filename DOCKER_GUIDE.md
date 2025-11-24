@@ -285,39 +285,180 @@ docker stats
 
 > ⚠️ **ВНИМАНИЕ:** Текущая конфигурация предназначена **ТОЛЬКО для локальной разработки**!
 
+### 1. Секретные ключи
+
 Перед деплоем на production:
 
-1. **Измените секретные ключи в `.env`:**
-   ```bash
-   # Сгенерируйте новый Django SECRET_KEY
-   python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
-   
-   # Сгенерируйте Fernet ключ для шифрования
-   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-   ```
+```bash
+# Сгенерируйте новый Django SECRET_KEY
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 
-2. **Обновите пароли БД:**
-   - `DB_PASSWORD`
-   - `POSTGRES_PASSWORD`
+# Сгенерируйте Fernet ключ для шифрования
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 
-3. **Отключите DEBUG режим:**
-   ```env
-   DJANGO_DEBUG=False
-   ```
+# Сгенерируйте JWT ключ
+openssl rand -base64 64
+```
 
-4. **Настройте ALLOWED_HOSTS:**
-   ```env
-   DJANGO_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-   ```
+**Обновите в `.env`:**
+```env
+DJANGO_SECRET_KEY=<новый-ключ>
+FIELD_ENCRYPTION_KEY=<новый-fernet-ключ>
+JWT_SECRET_KEY=<новый-jwt-ключ>
+```
 
-5. **Используйте production Dockerfile для frontend:**
-   ```yaml
-   frontend:
-     build:
-       target: production  # вместо development
-   ```
+### 2. Пароли БД
 
-6. **Добавьте HTTPS (например, через nginx-proxy + letsencrypt)**
+**Измените:**
+```env
+DB_PASSWORD=<сильный-пароль>
+POSTGRES_PASSWORD=<сильный-пароль>
+```
+
+### 3. Production настройки
+
+```env
+# Отключите DEBUG
+DJANGO_DEBUG=False
+
+# Настройте ALLOWED_HOSTS
+DJANGO_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+
+# Настройте CORS
+DJANGO_CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+```
+
+### 4. PostgreSQL Production Config
+
+**docker-compose.prod.yml:**
+```yaml
+postgres:
+  image: postgres:16-alpine
+  environment:
+    POSTGRES_DB: ${DB_NAME}
+    POSTGRES_USER: ${DB_USER}
+    POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # Production оптимизации
+    POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+  command: >
+    postgres
+    -c shared_buffers=256MB
+    -c effective_cache_size=1GB
+    -c maintenance_work_mem=64MB
+    -c checkpoint_completion_target=0.9
+    -c wal_buffers=16MB
+    -c default_statistics_target=100
+    -c random_page_cost=1.1
+    -c effective_io_concurrency=200
+    -c work_mem=4MB
+    -c min_wal_size=1GB
+    -c max_wal_size=4GB
+    -c max_connections=100
+  volumes:
+    - postgres_data:/var/lib/postgresql/data
+    - ./backups:/backups  # Backup directory
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+```
+
+### 5. Secrets Management
+
+#### Использование Docker Secrets
+
+**docker-compose.secrets.yml:**
+```yaml
+version: '3.9'
+
+services:
+  backend:
+    secrets:
+      - django_secret_key
+      - db_password
+      - jwt_secret_key
+    environment:
+      DJANGO_SECRET_KEY_FILE: /run/secrets/django_secret_key
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret_key
+
+secrets:
+  django_secret_key:
+    file: ./secrets/django_secret_key.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  jwt_secret_key:
+    file: ./secrets/jwt_secret_key.txt
+```
+
+**Создайте secrets:**
+```bash
+mkdir -p secrets
+echo "your-django-secret-key" > secrets/django_secret_key.txt
+echo "your-db-password" > secrets/db_password.txt
+echo "your-jwt-secret-key" > secrets/jwt_secret_key.txt
+
+# Защитите файлы
+chmod 600 secrets/*
+
+# Добавьте в .gitignore
+echo "secrets/" >> .gitignore
+```
+
+#### Использование HashiCorp Vault
+
+```python
+# backend/core/vault.py
+import hvac
+import os
+
+class VaultClient:
+    def __init__(self):
+        self.client = hvac.Client(
+            url=os.getenv('VAULT_ADDR'),
+            token=os.getenv('VAULT_TOKEN')
+        )
+    
+    def get_secret(self, path: str, key: str) -> str:
+        secret = self.client.secrets.kv.v2.read_secret_version(path=path)
+        return secret['data']['data'][key]
+
+# Использование
+vault = VaultClient()
+DJANGO_SECRET_KEY = vault.get_secret('marketai/django', 'secret_key')
+```
+
+### 6. Frontend Production Build
+
+**Используйте production Dockerfile:**
+```yaml
+frontend:
+  build:
+    context: ./frontend
+    target: production  # вместо development
+  restart: unless-stopped
+```
+
+### 7. HTTPS/SSL
+
+**Добавьте nginx с Let's Encrypt:**
+```yaml
+nginx:
+  image: nginx:alpine
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf
+    - ./ssl:/etc/nginx/ssl
+    - static_volume:/var/www/static
+  depends_on:
+    - backend
+    - frontend
+  restart: unless-stopped
+```
 
 ---
 
@@ -397,6 +538,9 @@ docker-compose exec -T postgres pg_dump -U marketai marketai > backup_$(date +%Y
 
 # Restore
 docker-compose exec -T postgres psql -U marketai marketai < backup_20251123_050000.sql
+
+# Автоматизированный backup (cron)
+0 2 * * * cd /path/to/marketai-python && docker-compose exec -T postgres pg_dump -U marketai marketai | gzip > backups/backup_$(date +\%Y\%m\%d).sql.gz
 ```
 
 ### Прямой доступ к PostgreSQL:
@@ -457,3 +601,7 @@ docker-compose up -d
 ---
 
 **Успешного тестирования! 🚀**
+
+---
+
+**Последнее обновление:** 24 ноября 2025
