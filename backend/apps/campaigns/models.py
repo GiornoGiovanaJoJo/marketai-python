@@ -32,6 +32,14 @@ class Campaign(models.Model):
         max_length=255,
     )
     
+    # NEW: Added description field to match Laravel model
+    description = models.TextField(
+        _('description'),
+        blank=True,
+        null=True,
+        help_text=_('Campaign description (optional)'),
+    )
+    
     key = models.CharField(
         _('API key'),
         max_length=2048,
@@ -55,8 +63,8 @@ class Campaign(models.Model):
     
     # Explicitly disable automatic timestamps (matching Laravel: $timestamps = false)
     # We keep the fields but don't auto-update them
-    created_at = models.DateTimeField(auto_now_add=True)  # Commented out
-    updated_at = models.DateTimeField(auto_now=True)      # Commented out
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         db_table = 'campaigns'
