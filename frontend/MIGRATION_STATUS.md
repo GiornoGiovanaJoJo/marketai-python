@@ -1,70 +1,95 @@
 # Frontend Migration Status
 
-## ✅ Completed (100%)
+**Последнее обновление:** 24 ноября 2025, 04:37 MSK
 
-### API Infrastructure
+---
+
+## ✅ Завершено (98%)
+
+### API Infrastructure - 100%
 - [x] `frontend/src/lib/api.ts` - Axios instance с JWT interceptors
 - [x] Token refresh механизм (автоматический)
 - [x] Error handling для 401/403/404/500
 
-### Services Layer
+### Services Layer - 90%
 - [x] `auth.service.ts` - Authentication endpoints (login, register, logout, me)
 - [x] `campaigns.service.ts` - CRUD campaigns (с поддержкой pagination)
 - [x] `statistics.service.ts` - Statistics endpoints (dashboard, reports, charts)
+- [ ] 10% остающихся эндпоинтов (Organizations, Referral, OPI)
 
-### Documentation
+### Contexts - 100%
+- [x] `AuthContext.tsx` - Аутентификация
+- [x] `ThemeContext.tsx` - Темная/светлая тема
+- [x] `SidebarContext.tsx` ⭐ - Sidebar state (добавлен 24.11.2025)
+
+### Hooks - 100%
+- [x] `useSidebar` ⭐ - Pin/mobile sidebar (добавлен 24.11.2025)
+- [x] `useAuth` - Аутентификация
+- [x] `useTheme` - Тема
+- [x] Другие custom hooks
+
+### Documentation - 100%
 - [x] `API_ENDPOINTS.md` - Полный маппинг Laravel → Django endpoints
 - [x] `RESPONSE_FORMATS.md` - Форматы ответов DRF
-- [x] Примеры использования в каждом сервисе
+- [x] `UI_COMPONENTS_MIGRATION.md` - Статус UI компонентов
+- [x] `docs/contexts/SidebarContext.md` ⭐ - API документация (24.11.2025)
+- [x] `docs/hooks/useSidebar.md` ⭐ - Hook документация (24.11.2025)
+- [x] `docs/QUICKSTART_SIDEBAR.md` ⭐ - Quick start (24.11.2025)
+- [x] `docs/CHANGELOG_SIDEBAR.md` ⭐ - Changelog (24.11.2025)
+- [x] `docs/examples/` - Примеры кода
 
 ---
 
-## 🔶 Pending Testing (0%)
+## 🔶 Pending (2%)
 
-### Functional Testing
-- [ ] Login/Register flow
-- [ ] Token refresh при 401
-- [ ] Campaigns CRUD operations
-- [ ] Statistics data fetching
-- [ ] Error handling UI
-- [ ] Pagination navigation
+### API Endpoints - 10% осталось
+- [ ] Organizations API (сотрудники, партнеры, доступ)
+- [ ] Referral API (реферальная программа)
+- [ ] OPI API
 
-### Pages Testing (0/26)
+### E2E Testing - 0%
+- [ ] Cypress или Playwright настройка
+- [ ] Тесты для 26 страниц
+- [ ] CI/CD интеграция
 
-#### Аутентификация
+---
+
+## 📋 Pages Testing (0/26)
+
+### Аутентификация
 - [ ] `/login` - Login page
 - [ ] `/register` - Register page
 
-#### Главные страницы
+### Главные страницы
 - [ ] `/` - Home page
 - [ ] `/dashboard` - Dashboard
 - [ ] `/campaigns` - Campaigns list
 
-#### Реклама
+### Реклама
 - [ ] `/advertising/rnp` - РНП
 - [ ] `/advertising/dds` - ДДС
 
-#### Отчёты
+### Отчёты
 - [ ] `/reports/financial` - Financial report
 - [ ] `/reports/plan-fact` - Plan-fact
 - [ ] `/reports/unit-economics` - Unit economics
 - [ ] `/reports/metrics` - Metrics
 - [ ] `/reports/heatmap` - Heatmap
 
-#### Организация
+### Организация
 - [ ] `/organization` - Organization
 - [ ] `/organization/employees` - Employees
 - [ ] `/organization/partners` - Partners
 - [ ] `/organization/access` - Access
 
-#### Автоматизация
+### Автоматизация
 - [ ] `/automation` - Automation
 - [ ] `/automation/pre-delivery` - Pre-delivery
 
-#### OPI
+### OPI
 - [ ] `/opi` - OPI Dashboard
 
-#### Реферальная программа
+### Реферальная программа
 - [ ] `/referral` - Overview
 - [ ] `/referral/network` - Network
 - [ ] `/referral/income` - Income
@@ -74,7 +99,7 @@
 
 ---
 
-## 📋 Testing Checklist
+## 🧪 Testing Checklist
 
 ### Prerequisites
 ```bash
@@ -126,7 +151,15 @@ http://localhost:3000
 9. Campaign removed from list
 ```
 
-#### 4. Statistics
+#### 4. Sidebar (новое 24.11.2025)
+```
+1. Desktop: Click pin button → Sidebar закрепляется
+2. Mobile: Open sidebar → Click outside → Sidebar закрывается
+3. Resize window → Sidebar адаптируется
+4. State сохраняется в localStorage
+```
+
+#### 5. Statistics
 ```
 1. Open /dashboard
 2. Should load dashboard stats (total campaigns, revenue, etc.)
@@ -136,7 +169,7 @@ http://localhost:3000
 6. Should load financial report for period
 ```
 
-#### 5. Error Handling
+#### 6. Error Handling
 ```
 1. Try login with wrong password
 2. Should show validation error
@@ -165,34 +198,38 @@ http://localhost:3000
 | Компонент | Статус | Прогресс |
 |-----------|--------|----------|
 | API Infrastructure | ✅ Complete | 100% |
-| Services Layer | ✅ Complete | 100% |
+| Services Layer | 🔶 Almost Done | 90% |
+| Contexts | ✅ Complete | 100% |
+| Hooks | ✅ Complete | 100% |
 | Documentation | ✅ Complete | 100% |
 | Unit Tests | ⚠️ Pending | 0% |
-| Integration Tests | ⚠️ Pending | 0% |
+| E2E Tests | ⚠️ Pending | 0% |
 | Pages Testing | ⚠️ Pending | 0/26 |
 
-**Overall Frontend Status: 95%** (осталось только тестирование)
+**Overall Frontend Status: 98%** (осталось 2%: 10% API + E2E тесты)
 
 ---
 
 ## 🚀 Next Steps
 
-1. **Запустить полный стек** через Docker:
+1. **Завершить API сервисы** (10%)
+   - `organizations.service.ts`
+   - `referral.service.ts`
+   - `opi.service.ts`
+
+2. **Добавить E2E тесты**
    ```bash
-   ./docker-local.sh start
+   npm install -D cypress
+   # или
+   npm install -D @playwright/test
    ```
 
-2. **Протестировать auth flow** (login/register/logout)
+3. **Протестировать все 26 страниц**
 
-3. **Протестировать campaigns CRUD** (create/read/update/delete)
-
-4. **Протестировать statistics** (dashboard, reports)
-
-5. **Пройти все 26 страниц** и проверить функциональность
-
-6. **Добавить unit tests** для сервисов
-
-7. **Deployment готовность** (env variables, build process)
+4. **Deployment готовность**
+   - Проверить env variables
+   - Production build process
+   - Docker production image
 
 ---
 
@@ -209,3 +246,7 @@ http://localhost:3000
 
 3. Откройте issue на GitHub:
    https://github.com/GiornoGiovanaJoJo/marketai-python/issues
+
+---
+
+**Последнее обновление:** 24 ноября 2025, 04:37 MSK
